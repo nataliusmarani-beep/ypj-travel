@@ -107,6 +107,7 @@ export default function NewRequestPage({ user }) {
           id_number:   d.ktp_number || d.dependent_id || '',
           email:       '',
           phone:       '',
+          _passport:   d.passport_id || '',
         })),
       ];
       setPassengers(list.length > 0 ? list : [emptyPassenger()]);

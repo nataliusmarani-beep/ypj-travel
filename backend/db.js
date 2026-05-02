@@ -132,9 +132,10 @@ async function initDB() {
       );
     `);
 
-    // Migrations: add columns to users if missing
-    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS campus_location TEXT;`);
-    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar TEXT;`);
+    // Migrations
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS campus_location TEXT;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS avatar TEXT;`);
+    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id TEXT;`);
 
     // Seed first Manager if no users exist
     const { rows } = await client.query('SELECT COUNT(*) AS n FROM users');
