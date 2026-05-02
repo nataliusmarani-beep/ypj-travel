@@ -16,20 +16,23 @@ const PURPOSE_OPTIONS = [
 const PAYMENT_OPTIONS = ['Cash', 'Travel Benefit', 'Cobus', 'Emergency', 'Medical'];
 
 const emptyPassenger = () => ({
-  _profileKey:   '',      // key from profileChoices, '' or '__manual__' = manual entry
+  _profileKey:   '',
+  _prefix:       '',      // 'Master' | 'Miss' → show DOB field
   name:          '',
   category:      'EMP',
   uid:           '',
   sponsor_uid:   '',
   gender:        'MALE',
   dob:           '',
-  other_id_type: 'NIK',  // NIK | Passport
+  other_id_type: 'NIK',
   id_number:     '',
-  _nik:          '',      // cached from profile choice
-  _passport:     '',      // cached from profile choice
+  _nik:          '',
+  _passport:     '',
   email:         '',
   phone:         '',
 });
+
+const isChild = p => p._prefix === 'Master' || p._prefix === 'Miss';
 
 function StepIndicator({ step }) {
   const steps = ['Trip Details', 'Passengers', 'Review & Submit'];
@@ -81,39 +84,43 @@ export default function NewRequestPage({ user }) {
   const [notes, setNotes]           = useState('');
 
   /* Step 2 */
-  const [passengers, setPassengers]     = useState([emptyPassenger()]);
-  const [profileChoices, setProfileChoices] = useState([]);   // [{key,label,name,category,gender,uid,sponsor_uid,nik,passport}]
-  const [profileReady, setProfileReady] = useState(false);
+  const [passengers, setPassengers]         = useState([emptyPassenger()]);
+  const [profileChoices, setProfileChoices] = useState([]);
+  const [myEmployeeId, setMyEmployeeId]     = useState('');
+  const [profileReady, setProfileReady]     = useState(false);
 
   useEffect(() => {
     api.getRTIs().then(d => setRtis(d.filter(r => r.status === 'open'))).catch(() => {});
-    // Load profile choices once
     Promise.all([api.getMe(), api.getDependents()])
       .then(([me, deps]) => {
+        const empId = me.employee_id || '';
+        setMyEmployeeId(empId);
         const choices = [
           {
-            key:         'self',
-            label:       `${me.name || me.email} (Employee)`,
-            name:        me.name        || '',
-            category:    'EMP',
-            gender:      '',           // not stored in user profile — user fills manually
-            uid:         me.employee_id || '',
-            sponsor_uid: '',
-            nik:         '',           // employees don't have NIK stored
-            passport:    '',
-            email:       me.email || '',
+            key:      'self',
+            label:    `${me.name || me.email} (Employee)`,
+            name:     me.name   || '',
+            prefix:   '',
+            category: 'EMP',
+            gender:   '',
+            uid:      empId,
+            nik:      '',
+            passport: '',
+            dob:      me.date_of_birth ? me.date_of_birth.slice(0, 10) : '',
+            email:    me.email || '',
           },
           ...deps.map(d => ({
-            key:         `dep_${d.id}`,
-            label:       `${d.prefix ? d.prefix + ' ' : ''}${d.name} (${d.relation})`,
-            name:        `${d.prefix ? d.prefix + ' ' : ''}${d.name}`,
-            category:    'DPN',
-            gender:      d.gender       || '',
-            uid:         d.dependent_id || '',
-            sponsor_uid: me.employee_id  || '',
-            nik:         d.ktp_number   || '',
-            passport:    d.passport_id  || '',
-            email:       '',
+            key:      `dep_${d.id}`,
+            label:    `${d.prefix ? d.prefix + ' ' : ''}${d.name} (${d.relation})`,
+            name:     `${d.prefix ? d.prefix + ' ' : ''}${d.name}`,
+            prefix:   d.prefix       || '',
+            category: 'DPN',
+            gender:   d.gender       || '',
+            uid:      d.dependent_id || '',
+            nik:      d.ktp_number   || '',
+            passport: d.passport_id  || '',
+            dob:      d.date_of_birth ? d.date_of_birth.slice(0, 10) : '',
+            email:    '',
           })),
         ];
         setProfileChoices(choices);
@@ -124,31 +131,27 @@ export default function NewRequestPage({ user }) {
 
   /* Apply a profile choice to a passenger slot */
   const applyProfileChoice = (idx, key) => {
-    if (!key || key === '__manual__') {
-      setPassengers(ps => ps.map((p, i) => i === idx
-        ? { ...emptyPassenger(), _profileKey: '__manual__' }
-        : p
-      ));
-      return;
-    }
+    if (!key) return;
     const choice = profileChoices.find(c => c.key === key);
     if (!choice) return;
-    const idNum = choice.nik || choice.passport || '';
     const idType = choice.nik ? 'NIK' : (choice.passport ? 'Passport' : 'NIK');
-    setPassengers(ps => ps.map((p, i) => i === idx ? {
+    const idNum  = idType === 'NIK' ? choice.nik : choice.passport;
+    setPassengers(ps => ps.map((p, i) => i !== idx ? p : {
       ...p,
       _profileKey:   key,
+      _prefix:       choice.prefix,
       name:          choice.name,
       category:      choice.category,
       gender:        choice.gender || p.gender,
       uid:           choice.uid,
-      sponsor_uid:   choice.sponsor_uid,
+      sponsor_uid:   choice.category === 'DPN' ? myEmployeeId : '',
       _nik:          choice.nik,
       _passport:     choice.passport,
       other_id_type: idType,
-      id_number:     idNum,
+      id_number:     idNum || '',
+      dob:           (choice.prefix === 'Master' || choice.prefix === 'Miss') ? choice.dob : '',
       email:         choice.email || p.email,
-    } : p));
+    }));
   };
 
   /* When user switches NIK ↔ Passport, swap the auto-filled id_number */
@@ -156,7 +159,7 @@ export default function NewRequestPage({ user }) {
     setPassengers(ps => ps.map((p, i) => {
       if (i !== idx) return p;
       const autoId = newType === 'NIK' ? p._nik : p._passport;
-      return { ...p, other_id_type: newType, id_number: autoId || p.id_number };
+      return { ...p, other_id_type: newType, id_number: autoId || '' };
     }));
   };
 
@@ -180,8 +183,9 @@ export default function NewRequestPage({ user }) {
   const validateStep2 = () => {
     for (let i = 0; i < passengers.length; i++) {
       const p = passengers[i];
-      if (!p.name.trim())      return `Passenger ${i+1}: Full name is required.`;
-      if (!p.dob)              return `Passenger ${i+1}: Date of birth is required.`;
+      if (!p._profileKey)      return `Passenger ${i+1}: Please select a person from the list.`;
+      if (!p.gender)           return `Passenger ${i+1}: Gender is required.`;
+      if (isChild(p) && !p.dob) return `Passenger ${i+1}: Date of birth is required for children.`;
       if (!p.id_number.trim()) return `Passenger ${i+1}: ID number is required.`;
       if (p.category === 'DPN' && !p.uid.trim())         return `Passenger ${i+1}: Dependent ID is required.`;
       if (p.category === 'DPN' && !p.sponsor_uid.trim()) return `Passenger ${i+1}: Sponsor UID is required.`;
@@ -439,160 +443,141 @@ export default function NewRequestPage({ user }) {
           <div className="card-title">Passengers</div>
 
           {!profileReady && (
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>Loading profile choices…</div>
+            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>Loading profile…</div>
           )}
 
-          {passengers.map((p, idx) => {
-            const fromProfile = p._profileKey && p._profileKey !== '__manual__';
-            return (
-              <div key={idx} className="passenger-card">
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                  <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 13 }}>Passenger {idx + 1}</div>
-                  {passengers.length > 1 && (
-                    <button className="btn btn-danger btn-sm" onClick={() => removePassenger(idx)}>Remove</button>
-                  )}
-                </div>
+          {profileReady && profileChoices.length === 0 && (
+            <div className="error-box" style={{ marginBottom: 16 }}>
+              No profile data found. Please complete your profile (Employee ID, Dependents) before submitting a request.
+            </div>
+          )}
 
-                {/* ── Full Name — dropdown from profile ── */}
-                <div className="form-group" style={{ marginBottom: 14 }}>
-                  <label className="form-label">Full Name <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  {profileChoices.length > 0 ? (
-                    <select
-                      className="form-select"
-                      value={p._profileKey || ''}
-                      onChange={e => applyProfileChoice(idx, e.target.value)}
-                      style={{ marginBottom: (!p._profileKey || p._profileKey === '__manual__') ? 8 : 0 }}
-                    >
-                      <option value="">— Select person —</option>
-                      {profileChoices.map(c => (
-                        <option key={c.key} value={c.key}>{c.label}</option>
-                      ))}
-                      <option value="__manual__">✏️ Enter manually</option>
-                    </select>
-                  ) : null}
+          {passengers.map((p, idx) => (
+            <div key={idx} className="passenger-card">
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 13 }}>Passenger {idx + 1}</div>
+                {passengers.length > 1 && (
+                  <button className="btn btn-danger btn-sm" onClick={() => removePassenger(idx)}>Remove</button>
+                )}
+              </div>
 
-                  {/* Manual name input: shown when "Enter manually" selected OR no choices loaded */}
-                  {(!p._profileKey || p._profileKey === '__manual__') && (
-                    <input
-                      className="form-input"
-                      value={p.name}
-                      onChange={e => updatePassenger(idx, 'name', e.target.value)}
-                      placeholder="Full name as on ID document"
-                    />
-                  )}
-
-                  {/* Confirmed name display when from profile */}
-                  {fromProfile && (
-                    <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', padding: '6px 10px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, marginTop: 4 }}>
-                      {p.name}
-                    </div>
-                  )}
-                </div>
-
-                {/* ── Category + Gender (auto-filled, read-only from profile) ── */}
-                <div className="form-row" style={{ marginBottom: 4 }}>
-                  <div className="form-group">
-                    <label className="form-label">Category</label>
-                    {fromProfile ? (
-                      <div style={{ fontSize: 13, padding: '7px 10px', background: '#f1f5f9', borderRadius: 6, border: '1px solid var(--border)', color: 'var(--muted)' }}>
-                        {p.category === 'EMP' ? '🧑‍💼 EMP — Employee' : '👨‍👩‍👧 DPN — Dependent'}
-                      </div>
-                    ) : (
-                      <select className="form-select" value={p.category} onChange={e => updatePassenger(idx, 'category', e.target.value)}>
-                        <option value="EMP">EMP — Employee</option>
-                        <option value="DPN">DPN — Dependent</option>
-                      </select>
-                    )}
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Gender</label>
-                    <select className="form-select" value={p.gender} onChange={e => updatePassenger(idx, 'gender', e.target.value)}>
-                      <option value="">— Select —</option>
-                      <option value="MALE">Male</option>
-                      <option value="FEMALE">Female</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* ── Dependent ID + Sponsor UID — only for DPN ── */}
-                {p.category === 'DPN' && (
-                  <div className="form-row" style={{ marginBottom: 4 }}>
-                    <div className="form-group">
-                      <label className="form-label">Dependent ID <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input
-                        className="form-input"
-                        value={p.uid}
-                        onChange={e => updatePassenger(idx, 'uid', e.target.value)}
-                        placeholder="0000910439-01"
-                        readOnly={fromProfile && !!p.uid}
-                        style={fromProfile && p.uid ? { background: '#f1f5f9', color: 'var(--muted)' } : {}}
-                      />
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Format: employee ID + sequence (e.g. -01)</div>
-                    </div>
-                    <div className="form-group">
-                      <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input
-                        className="form-input"
-                        value={p.sponsor_uid}
-                        onChange={e => updatePassenger(idx, 'sponsor_uid', e.target.value)}
-                        placeholder="0000910439"
-                        readOnly={fromProfile && !!p.sponsor_uid}
-                        style={fromProfile && p.sponsor_uid ? { background: '#f1f5f9', color: 'var(--muted)' } : {}}
-                      />
-                    </div>
+              {/* ── Full Name — profile dropdown only ── */}
+              <div className="form-group" style={{ marginBottom: 14 }}>
+                <label className="form-label">Full Name <span style={{ color: 'var(--danger)' }}>*</span></label>
+                <select
+                  className="form-select"
+                  value={p._profileKey}
+                  onChange={e => applyProfileChoice(idx, e.target.value)}
+                >
+                  <option value="">— Select person —</option>
+                  {profileChoices.map(c => (
+                    <option key={c.key} value={c.key}>{c.label}</option>
+                  ))}
+                </select>
+                {p._profileKey && (
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', padding: '6px 10px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, marginTop: 6 }}>
+                    {p.name}
                   </div>
                 )}
+              </div>
 
-                {/* ── Date of Birth ── */}
+              {/* ── Category (auto, read-only) + Gender ── */}
+              <div className="form-row" style={{ marginBottom: 4 }}>
+                <div className="form-group">
+                  <label className="form-label">Category</label>
+                  <div style={{ fontSize: 13, padding: '7px 10px', background: '#f1f5f9', borderRadius: 6, border: '1px solid var(--border)', color: 'var(--text)', minHeight: 36 }}>
+                    {p._profileKey
+                      ? (p.category === 'EMP' ? '🧑‍💼 EMP — Employee' : '👨‍👩‍👧 DPN — Dependent')
+                      : <span style={{ color: 'var(--muted)' }}>Auto-filled</span>
+                    }
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Gender <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <select className="form-select" value={p.gender} onChange={e => updatePassenger(idx, 'gender', e.target.value)}>
+                    <option value="">— Select —</option>
+                    <option value="MALE">Male</option>
+                    <option value="FEMALE">Female</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* ── Dependent ID + Sponsor UID — DPN only ── */}
+              {p.category === 'DPN' && p._profileKey && (
+                <div className="form-row" style={{ marginBottom: 4 }}>
+                  <div className="form-group">
+                    <label className="form-label">Dependent ID <span style={{ color: 'var(--danger)' }}>*</span></label>
+                    <input
+                      className="form-input"
+                      value={p.uid}
+                      onChange={e => updatePassenger(idx, 'uid', e.target.value)}
+                      placeholder="0000910439-01"
+                      style={p.uid ? { background: '#f1f5f9', color: 'var(--muted)' } : {}}
+                    />
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>
+                      Format: employee ID + sequence (e.g. -01)
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Sponsor UID (Employee ID)</label>
+                    <input
+                      className="form-input"
+                      value={myEmployeeId}
+                      readOnly
+                      style={{ background: '#f1f5f9', color: 'var(--muted)' }}
+                    />
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Auto-filled from your profile</div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── Date of Birth — children (Master / Miss) only ── */}
+              {isChild(p) && (
                 <div className="form-group" style={{ marginBottom: 4 }}>
                   <label className="form-label">Date of Birth <span style={{ color: 'var(--danger)' }}>*</span></label>
                   <input className="form-input" type="date" value={p.dob} onChange={e => updatePassenger(idx, 'dob', e.target.value)} />
                 </div>
+              )}
 
-                {/* ── Other ID Type + ID Number ── */}
-                <div className="form-row" style={{ marginBottom: 4 }}>
-                  <div className="form-group">
-                    <label className="form-label">Other ID Type <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <select
-                      className="form-select"
-                      value={p.other_id_type}
-                      onChange={e => handleIdTypeChange(idx, e.target.value)}
-                    >
-                      <option value="NIK">NIK</option>
-                      <option value="Passport">Passport</option>
-                    </select>
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">ID Number <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input
-                      className="form-input"
-                      value={p.id_number}
-                      onChange={e => updatePassenger(idx, 'id_number', e.target.value)}
-                      placeholder={p.other_id_type === 'NIK' ? '16-digit NIK number' : 'Passport number'}
-                    />
-                    {fromProfile && !p.id_number && (
-                      <div style={{ fontSize: 11, color: 'var(--warning, #d97706)', marginTop: 3 }}>
-                        ⚠️ {p.other_id_type === 'NIK' ? 'NIK' : 'Passport'} not set in profile — please enter manually
-                      </div>
-                    )}
-                  </div>
+              {/* ── Other ID Type + ID Number ── */}
+              <div className="form-row" style={{ marginBottom: 4 }}>
+                <div className="form-group">
+                  <label className="form-label">Other ID Type <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <select className="form-select" value={p.other_id_type} onChange={e => handleIdTypeChange(idx, e.target.value)}>
+                    <option value="NIK">NIK</option>
+                    <option value="Passport">Passport</option>
+                  </select>
                 </div>
-
-                {/* ── Contact Email + Phone (always manual) ── */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label className="form-label">Contact Email</label>
-                    <input className="form-input" type="email" value={p.email} onChange={e => updatePassenger(idx, 'email', e.target.value)} placeholder="email@example.com" />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Phone / Mobile</label>
-                    <input className="form-input" value={p.phone} onChange={e => updatePassenger(idx, 'phone', e.target.value)} placeholder="+62 …" />
-                  </div>
+                <div className="form-group">
+                  <label className="form-label">ID Number <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input
+                    className="form-input"
+                    value={p.id_number}
+                    onChange={e => updatePassenger(idx, 'id_number', e.target.value)}
+                    placeholder={p.other_id_type === 'NIK' ? '16-digit NIK number' : 'Passport number'}
+                  />
+                  {p._profileKey && !p.id_number && (
+                    <div style={{ fontSize: 11, color: '#d97706', marginTop: 3 }}>
+                      ⚠️ {p.other_id_type === 'NIK' ? 'NIK' : 'Passport'} not saved in profile — please enter manually
+                    </div>
+                  )}
                 </div>
               </div>
-            );
-          })}
+
+              {/* ── Contact Email + Phone ── */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Contact Email</label>
+                  <input className="form-input" type="email" value={p.email} onChange={e => updatePassenger(idx, 'email', e.target.value)} placeholder="email@example.com" />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Phone / Mobile</label>
+                  <input className="form-input" value={p.phone} onChange={e => updatePassenger(idx, 'phone', e.target.value)} placeholder="+62 …" />
+                </div>
+              </div>
+            </div>
+          ))}
 
           <button className="btn btn-secondary" onClick={addPassenger} style={{ marginBottom: 20 }}>
             + Add Passenger

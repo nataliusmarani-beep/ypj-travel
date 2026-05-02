@@ -17,7 +17,7 @@ const MAX_AVATAR_BYTES = 200 * 1024; // 200 KB
 
 const emptyDep = () => ({
   prefix: 'Mr', name: '', dependent_id: '', age: '', gender: 'MALE',
-  relation: 'Spouse', ktp_number: '', passport_id: '',
+  relation: 'Spouse', ktp_number: '', passport_id: '', date_of_birth: '',
 });
 
 /**
@@ -80,7 +80,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
   const fileRef   = useRef(null);
 
   /* ── Profile fields ── */
-  const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '' });
+  const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '', date_of_birth: '' });
   const [profErrors, setProfErrors] = useState({});
   const [saving, setSaving]   = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
@@ -114,11 +114,12 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
     }
     api.getMe().then(d => {
       setProf({
-        name:             d.name            || '',
-        employee_id:      d.employee_id     || '',
-        unit:             d.unit            || 'PAUD',
-        campus_location:  d.campus_location || '',
-        telegram_chat_id: d.telegram_chat_id|| '',
+        name:             d.name             || '',
+        employee_id:      d.employee_id      || '',
+        unit:             d.unit             || 'PAUD',
+        campus_location:  d.campus_location  || '',
+        telegram_chat_id: d.telegram_chat_id || '',
+        date_of_birth:    d.date_of_birth ? d.date_of_birth.slice(0, 10) : '',
       });
       setSavedAvatar(d.avatar || '');
     }).catch(() => {});
@@ -398,6 +399,12 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                     </div>
 
                     <div className="form-group">
+                      <label className="form-label">Date of Birth</label>
+                      <input className="form-input" type="date" value={prof.date_of_birth}
+                        onChange={e => setProf(p => ({ ...p, date_of_birth: e.target.value }))} />
+                    </div>
+
+                    <div className="form-group">
                       <label className="form-label">Campus Location <span style={{ color: 'var(--danger)' }}>*</span></label>
                       <select className="form-select" value={prof.campus_location} {...fi('campus_location', profErrors)}
                         onChange={e => setProf(p => ({ ...p, campus_location: e.target.value }))}>
@@ -470,7 +477,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                                 </div>
                               </div>
                               <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                                <button className="btn btn-secondary btn-sm" onClick={() => { setEditing({ ...d, ktp_number: d.ktp_number||'', passport_id: d.passport_id||'' }); setDepErrors({}); setDepErr(''); setDepMsg(''); }}>Edit</button>
+                                <button className="btn btn-secondary btn-sm" onClick={() => { setEditing({ ...d, ktp_number: d.ktp_number||'', passport_id: d.passport_id||'', date_of_birth: d.date_of_birth ? d.date_of_birth.slice(0,10) : '' }); setDepErrors({}); setDepErr(''); setDepMsg(''); }}>Edit</button>
                                 <button className="btn btn-danger btn-sm"    onClick={() => handleDeleteDep(d.id)}>Delete</button>
                               </div>
                             </div>
@@ -519,6 +526,17 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                           <input className="form-input" type="number" min="0" max="120" value={editing.age || ''} {...fi('age', depErrors)}
                             onChange={e => setEditing(d => ({ ...d, age: e.target.value ? parseInt(e.target.value) : '' }))} placeholder="Age" />
                           {errTip('age', depErrors)}
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">
+                            Date of Birth
+                            {(editing.prefix === 'Master' || editing.prefix === 'Miss') && (
+                              <span style={{ color: 'var(--danger)' }}> *</span>
+                            )}
+                          </label>
+                          <input className="form-input" type="date" value={editing.date_of_birth || ''}
+                            onChange={e => setEditing(d => ({ ...d, date_of_birth: e.target.value }))} />
                         </div>
 
                         <div className="form-group">

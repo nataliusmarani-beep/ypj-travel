@@ -135,7 +135,9 @@ async function initDB() {
     // Migrations
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS campus_location TEXT;`);
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS avatar TEXT;`);
-    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id TEXT;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS date_of_birth DATE;`);
+    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id   TEXT;`);
+    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS date_of_birth DATE;`);
     // Widen passengers id_type to allow NIK & Passport
     await client.query(`ALTER TABLE passengers DROP CONSTRAINT IF EXISTS passengers_id_type_check`);
     await client.query(`ALTER TABLE passengers ADD  CONSTRAINT passengers_id_type_check
