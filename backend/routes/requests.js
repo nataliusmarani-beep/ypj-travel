@@ -56,7 +56,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const {
     request_type, rti_event_id,
-    travel_purpose, transport_type, payment_method,
+    travel_purpose, transport_type, airplane_type, payment_method,
     outbound_type, outbound_from, outbound_to, outbound_date,
     has_inbound, inbound_type, inbound_from, inbound_to, inbound_date,
     notes, passengers,
@@ -72,15 +72,15 @@ router.post('/', async (req, res) => {
     const { rows: [newReq] } = await client.query(`
       INSERT INTO travel_requests
         (request_type,rti_event_id,submitter_id,submitter_name,submitter_email,
-         travel_purpose,transport_type,payment_method,
+         travel_purpose,transport_type,airplane_type,payment_method,
          outbound_type,outbound_from,outbound_to,outbound_date,
          has_inbound,inbound_type,inbound_from,inbound_to,inbound_date,notes)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)
       RETURNING *
     `, [
       request_type||'regular', rti_event_id||null,
       req.user.id, req.user.name, req.user.email,
-      travel_purpose, transport_type||'plane', payment_method||null,
+      travel_purpose, transport_type||'plane', airplane_type||null, payment_method||null,
       outbound_type||null, outbound_from||null, outbound_to||null, outbound_date||null,
       has_inbound||false, inbound_type||null, inbound_from||null, inbound_to||null, inbound_date||null,
       notes||null,

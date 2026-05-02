@@ -146,25 +146,28 @@ export default function NewRequestPage({ user }) {
   const [successId, setSuccessId]   = useState(null);
 
   /* Step 1 fields */
-  const [reqType, setReqType]       = useState(rtiParam ? 'RTI' : 'Regular');
-  const [rtiId, setRtiId]           = useState(rtiParam);
-  const [transport, setTransport]   = useState('Plane');
-  const [purpose, setPurpose]       = useState('VAC');
-  const [payment, setPayment]       = useState('Travel Benefit');
-  const [outType, setOutType]       = useState('DOM');
-  const [outFrom, setOutFrom]       = useState('TIM');
+  const [reqType, setReqType]         = useState(rtiParam ? 'RTI' : 'Regular');
+  const [rtiId, setRtiId]             = useState(rtiParam);
+  const [transport, setTransport]     = useState('Airplane');
+  const [airplaneType, setAirplaneType] = useState('Commercial');
+  const [purpose, setPurpose]         = useState('VAC');
+  const [payment, setPayment]         = useState('Travel Benefit');
+  const [outType, setOutType]         = useState('DOM');
+  const [outFrom, setOutFrom]         = useState('TIM');
   const [outFromOther, setOutFromOther] = useState('');
-  const [outTo, setOutTo]           = useState('CGK');
-  const [outToOther, setOutToOther] = useState('');
-  const [outDate, setOutDate]       = useState('');
-  const [hasReturn, setHasReturn]   = useState(false);
-  const [inType, setInType]         = useState('DOM');
-  const [inFrom, setInFrom]         = useState('CGK');
+  const [outTo, setOutTo]             = useState('CGK');
+  const [outToOther, setOutToOther]   = useState('');
+  const [outDate, setOutDate]         = useState('');
+  const [busOutRoute, setBusOutRoute] = useState('');
+  const [busInRoute, setBusInRoute]   = useState('');
+  const [hasReturn, setHasReturn]     = useState(false);
+  const [inType, setInType]           = useState('DOM');
+  const [inFrom, setInFrom]           = useState('CGK');
   const [inFromOther, setInFromOther] = useState('');
-  const [inTo, setInTo]             = useState('TIM');
-  const [inToOther, setInToOther]   = useState('');
-  const [inDate, setInDate]         = useState('');
-  const [notes, setNotes]           = useState('');
+  const [inTo, setInTo]               = useState('TIM');
+  const [inToOther, setInToOther]     = useState('');
+  const [inDate, setInDate]           = useState('');
+  const [notes, setNotes]             = useState('');
 
   /* Step 2 */
   const [passengers, setPassengers]         = useState([emptyPassenger()]);
@@ -249,14 +252,23 @@ export default function NewRequestPage({ user }) {
 
   const validateStep1 = () => {
     if (reqType === 'RTI' && !rtiId) return 'Please select an RTI event.';
-    if (!outFrom || !outTo)          return 'Please fill in outbound airports.';
-    if (outFrom === 'Other' && !outFromOther.trim()) return 'Please specify the departure airport.';
-    if (outTo   === 'Other' && !outToOther.trim())   return 'Please specify the destination airport.';
-    if (!outDate)                    return 'Please select an outbound travel date.';
-    if (hasReturn) {
-      if (!inDate) return 'Please select a return date.';
-      if (inFrom === 'Other' && !inFromOther.trim()) return 'Please specify the return departure airport.';
-      if (inTo   === 'Other' && !inToOther.trim())   return 'Please specify the return destination airport.';
+    if (transport === 'Bus') {
+      if (!busOutRoute) return 'Please select a bus route.';
+      if (!outDate)     return 'Please select a departure date.';
+      if (hasReturn) {
+        if (!busInRoute) return 'Please select a return bus route.';
+        if (!inDate)     return 'Please select a return date.';
+      }
+    } else {
+      if (!outFrom || !outTo)          return 'Please fill in outbound airports.';
+      if (outFrom === 'Other' && !outFromOther.trim()) return 'Please specify the departure airport.';
+      if (outTo   === 'Other' && !outToOther.trim())   return 'Please specify the destination airport.';
+      if (!outDate)                    return 'Please select an outbound travel date.';
+      if (hasReturn) {
+        if (!inDate) return 'Please select a return date.';
+        if (inFrom === 'Other' && !inFromOther.trim()) return 'Please specify the return departure airport.';
+        if (inTo   === 'Other' && !inToOther.trim())   return 'Please specify the return destination airport.';
+      }
     }
     return '';
   };
@@ -295,36 +307,42 @@ export default function NewRequestPage({ user }) {
     setError(''); setStep(3);
   };
 
+  /* Derive bus from/to from route key */
+  const busFrom = route => route === 'TPN-TIM' ? 'TPN' : route === 'TIM-TPN' ? 'TIM' : '';
+  const busTo   = route => route === 'TPN-TIM' ? 'TIM' : route === 'TIM-TPN' ? 'TPN' : '';
+
   const handleSubmit = async () => {
     setSubmitting(true); setError('');
     try {
+      const isBus = transport === 'Bus';
       const payload = {
         request_type:    reqType,
-        rti_id:          reqType === 'RTI' ? rtiId : null,
-        transport_type:  transport,
-        purpose,
-        payment_method:  payment,
-        outbound_type:   outType,
-        outbound_from:   resolveAirport(outFrom, outFromOther),
-        outbound_to:     resolveAirport(outTo, outToOther),
+        rti_event_id:    reqType === 'RTI' ? rtiId : null,
+        transport_type:  isBus ? 'bus' : 'plane',
+        airplane_type:   !isBus ? airplaneType : null,
+        travel_purpose:  purpose,
+        payment_method:  isBus ? null : payment,
+        outbound_type:   isBus ? 'DOM' : outType,
+        outbound_from:   isBus ? busFrom(busOutRoute) : resolveAirport(outFrom, outFromOther),
+        outbound_to:     isBus ? busTo(busOutRoute)   : resolveAirport(outTo, outToOther),
         outbound_date:   outDate,
-        has_return:      hasReturn,
-        inbound_type:    hasReturn ? inType : null,
-        inbound_from:    hasReturn ? resolveAirport(inFrom, inFromOther) : null,
-        inbound_to:      hasReturn ? resolveAirport(inTo, inToOther) : null,
+        has_inbound:     hasReturn,
+        inbound_type:    hasReturn ? (isBus ? 'DOM' : inType) : null,
+        inbound_from:    hasReturn ? (isBus ? busFrom(busInRoute) : resolveAirport(inFrom, inFromOther)) : null,
+        inbound_to:      hasReturn ? (isBus ? busTo(busInRoute)   : resolveAirport(inTo, inToOther))    : null,
         inbound_date:    hasReturn ? inDate : null,
         notes,
         passengers: passengers.map(p => ({
-          name:        p.name.trim(),
-          category:    p._isVisitor ? 'VST' : p.category,
-          uid:         p.uid.trim()  || null,
-          sponsor_uid: p._isVisitor  ? myEmployeeId : (p.sponsor_uid.trim() || null),
-          gender:      p.gender      || null,
-          dob:         p.dob         || null,
-          id_type:     p.other_id_type,
-          id_number:   p.id_number.trim(),
-          email:       p.email.trim(),
-          phone:       p.phone.trim(),
+          passenger_name: p.name.trim(),
+          category:       p._isVisitor ? 'VST' : p.category,
+          uid:            p.uid.trim()  || null,
+          sponsor_uid:    p._isVisitor  ? myEmployeeId : (p.sponsor_uid.trim() || null),
+          gender:         p.gender      || null,
+          date_of_birth:  p.dob         || null,
+          id_type:        p.other_id_type,
+          id_number:      p.id_number.trim(),
+          contact_email:  p.email.trim(),
+          phone:          p.phone.trim(),
         })),
       };
       const result = await api.submitRequest(payload);
@@ -472,57 +490,84 @@ export default function NewRequestPage({ user }) {
             <div className="form-group">
               <label className="form-label">Transport Type</label>
               <select className="form-select" style={selectSx} value={transport} onChange={e => setTransport(e.target.value)}>
-                <option value="Plane">✈️ Plane</option>
+                <option value="Airplane">✈️ Airplane</option>
                 <option value="Bus">🚌 Bus</option>
-                <option value="Both">✈️🚌 Both</option>
               </select>
             </div>
+            {transport === 'Airplane' && (
+              <div className="form-group">
+                <label className="form-label">Airplane Type</label>
+                <select className="form-select" style={selectSx} value={airplaneType} onChange={e => setAirplaneType(e.target.value)}>
+                  <option value="Airfast Indonesia">Airfast Indonesia</option>
+                  <option value="Commercial">Commercial</option>
+                </select>
+              </div>
+            )}
             <div className="form-group">
               <label className="form-label">Travel Purpose</label>
               <select className="form-select" style={selectSx} value={purpose} onChange={e => setPurpose(e.target.value)}>
                 {PURPOSE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.value} — {o.label}</option>)}
               </select>
             </div>
-            <div className="form-group">
-              <label className="form-label">Payment Method</label>
-              <select className="form-select" style={selectSx} value={payment} onChange={e => setPayment(e.target.value)}>
-                {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-            </div>
+            {transport === 'Airplane' && (
+              <div className="form-group">
+                <label className="form-label">Payment Method</label>
+                <select className="form-select" style={selectSx} value={payment} onChange={e => setPayment(e.target.value)}>
+                  {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                </select>
+              </div>
+            )}
           </div>
 
           <SectionHeading>🛫 Outbound Trip</SectionHeading>
-          <div className="form-row">
-            <div className="form-group">
-              <label className="form-label">Type</label>
-              <select className="form-select" style={selectSx} value={outType} onChange={e => setOutType(e.target.value)}>
-                <option value="DOM">Domestic (DOM)</option>
-                <option value="INT">International (INT)</option>
-              </select>
+          {transport === 'Bus' ? (
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Bus Route</label>
+                <select className="form-select" style={selectSx} value={busOutRoute} onChange={e => setBusOutRoute(e.target.value)}>
+                  <option value="">— Select Route —</option>
+                  <option value="TPN-TIM">🚌 Tembagapura → Timika</option>
+                  <option value="TIM-TPN">🚌 Timika → Tembagapura</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Departure Date</label>
+                <input className="form-input" style={inputSx} type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">From Airport</label>
-              <select className="form-select" style={selectSx} value={outFrom} onChange={e => setOutFrom(e.target.value)}>
-                {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-              {outFrom === 'Other' && (
-                <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={outFromOther} onChange={e => setOutFromOther(e.target.value)} />
-              )}
+          ) : (
+            <div className="form-row">
+              <div className="form-group">
+                <label className="form-label">Type</label>
+                <select className="form-select" style={selectSx} value={outType} onChange={e => setOutType(e.target.value)}>
+                  <option value="DOM">Domestic (DOM)</option>
+                  <option value="INT">International (INT)</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">From Airport</label>
+                <select className="form-select" style={selectSx} value={outFrom} onChange={e => setOutFrom(e.target.value)}>
+                  {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+                {outFrom === 'Other' && (
+                  <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={outFromOther} onChange={e => setOutFromOther(e.target.value)} />
+                )}
+              </div>
+              <div className="form-group">
+                <label className="form-label">To Airport</label>
+                <select className="form-select" style={selectSx} value={outTo} onChange={e => setOutTo(e.target.value)}>
+                  {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+                {outTo === 'Other' && (
+                  <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={outToOther} onChange={e => setOutToOther(e.target.value)} />
+                )}
+              </div>
+              <div className="form-group">
+                <label className="form-label">Departure Date</label>
+                <input className="form-input" style={inputSx} type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
+              </div>
             </div>
-            <div className="form-group">
-              <label className="form-label">To Airport</label>
-              <select className="form-select" style={selectSx} value={outTo} onChange={e => setOutTo(e.target.value)}>
-                {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-              {outTo === 'Other' && (
-                <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={outToOther} onChange={e => setOutToOther(e.target.value)} />
-              )}
-            </div>
-            <div className="form-group">
-              <label className="form-label">Departure Date</label>
-              <input className="form-input" style={inputSx} type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
-            </div>
-          </div>
+          )}
 
           {/* Return toggle */}
           <label style={{
@@ -546,37 +591,54 @@ export default function NewRequestPage({ user }) {
           {hasReturn && (
             <>
               <SectionHeading>🛬 Inbound Trip</SectionHeading>
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Type</label>
-                  <select className="form-select" style={selectSx} value={inType} onChange={e => setInType(e.target.value)}>
-                    <option value="DOM">Domestic (DOM)</option>
-                    <option value="INT">International (INT)</option>
-                  </select>
+              {transport === 'Bus' ? (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Bus Route</label>
+                    <select className="form-select" style={selectSx} value={busInRoute} onChange={e => setBusInRoute(e.target.value)}>
+                      <option value="">— Select Route —</option>
+                      <option value="TPN-TIM">🚌 Tembagapura → Timika</option>
+                      <option value="TIM-TPN">🚌 Timika → Tembagapura</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Return Date</label>
+                    <input className="form-input" style={inputSx} type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">From Airport</label>
-                  <select className="form-select" style={selectSx} value={inFrom} onChange={e => setInFrom(e.target.value)}>
-                    {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                  {inFrom === 'Other' && (
-                    <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={inFromOther} onChange={e => setInFromOther(e.target.value)} />
-                  )}
+              ) : (
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Type</label>
+                    <select className="form-select" style={selectSx} value={inType} onChange={e => setInType(e.target.value)}>
+                      <option value="DOM">Domestic (DOM)</option>
+                      <option value="INT">International (INT)</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">From Airport</label>
+                    <select className="form-select" style={selectSx} value={inFrom} onChange={e => setInFrom(e.target.value)}>
+                      {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                    {inFrom === 'Other' && (
+                      <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={inFromOther} onChange={e => setInFromOther(e.target.value)} />
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">To Airport</label>
+                    <select className="form-select" style={selectSx} value={inTo} onChange={e => setInTo(e.target.value)}>
+                      {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
+                    </select>
+                    {inTo === 'Other' && (
+                      <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={inToOther} onChange={e => setInToOther(e.target.value)} />
+                    )}
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Return Date</label>
+                    <input className="form-input" style={inputSx} type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
+                  </div>
                 </div>
-                <div className="form-group">
-                  <label className="form-label">To Airport</label>
-                  <select className="form-select" style={selectSx} value={inTo} onChange={e => setInTo(e.target.value)}>
-                    {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                  {inTo === 'Other' && (
-                    <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={inToOther} onChange={e => setInToOther(e.target.value)} />
-                  )}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Return Date</label>
-                  <input className="form-input" style={inputSx} type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
-                </div>
-              </div>
+              )}
             </>
           )}
 
@@ -917,13 +979,17 @@ export default function NewRequestPage({ user }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px,1fr))', gap: 10, marginBottom: 20 }}>
             {[
               ['Request Type', reqType + (rtiId ? ` — ${rtis.find(r=>r.id==rtiId)?.name||rtiId}` : '')],
-              ['Transport',    transport],
+              ['Transport',    transport === 'Airplane' ? `✈️ Airplane (${airplaneType})` : '🚌 Bus'],
               ['Purpose',      purpose],
-              ['Payment',      payment],
-              ['Outbound',     `${resolveAirport(outFrom,outFromOther)} → ${resolveAirport(outTo,outToOther)}`],
+              ...(transport === 'Airplane' ? [['Payment', payment]] : []),
+              ['Outbound', transport === 'Bus'
+                ? (busOutRoute === 'TPN-TIM' ? 'Tembagapura → Timika' : busOutRoute === 'TIM-TPN' ? 'Timika → Tembagapura' : '—')
+                : `${resolveAirport(outFrom,outFromOther)} → ${resolveAirport(outTo,outToOther)}`],
               ['Depart Date',  outDate],
               ...(hasReturn ? [
-                ['Inbound',      `${resolveAirport(inFrom,inFromOther)} → ${resolveAirport(inTo,inToOther)}`],
+                ['Inbound', transport === 'Bus'
+                  ? (busInRoute === 'TPN-TIM' ? 'Tembagapura → Timika' : busInRoute === 'TIM-TPN' ? 'Timika → Tembagapura' : '—')
+                  : `${resolveAirport(inFrom,inFromOther)} → ${resolveAirport(inTo,inToOther)}`],
                 ['Inbound Date', inDate],
               ] : []),
             ].map(([k, v]) => (
