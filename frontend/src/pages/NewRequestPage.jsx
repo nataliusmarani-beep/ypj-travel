@@ -540,12 +540,12 @@ export default function NewRequestPage({ user }) {
               onChange={e => setHasReturn(e.target.checked)}
               style={{ width: 16, height: 16 }}
             />
-            🔄 Add Return Trip
+            🔄 Add Inbound Trip
           </label>
 
           {hasReturn && (
             <>
-              <SectionHeading>🛬 Return Trip</SectionHeading>
+              <SectionHeading>🛬 Inbound Trip</SectionHeading>
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Type</label>
@@ -923,8 +923,8 @@ export default function NewRequestPage({ user }) {
               ['Outbound',     `${resolveAirport(outFrom,outFromOther)} → ${resolveAirport(outTo,outToOther)}`],
               ['Depart Date',  outDate],
               ...(hasReturn ? [
-                ['Return',       `${resolveAirport(inFrom,inFromOther)} → ${resolveAirport(inTo,inToOther)}`],
-                ['Return Date',  inDate],
+                ['Inbound',      `${resolveAirport(inFrom,inFromOther)} → ${resolveAirport(inTo,inToOther)}`],
+                ['Inbound Date', inDate],
               ] : []),
             ].map(([k, v]) => (
               <div key={k} style={{
