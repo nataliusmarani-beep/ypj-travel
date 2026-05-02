@@ -80,7 +80,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
   const fileRef   = useRef(null);
 
   /* ── Profile fields ── */
-  const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '', date_of_birth: '', gender: '' });
+  const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '', date_of_birth: '', gender: '', nik_number: '', passport_id: '' });
   const [profErrors, setProfErrors] = useState({});
   const [saving, setSaving]   = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
@@ -120,7 +120,9 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
         campus_location:  d.campus_location  || '',
         telegram_chat_id: d.telegram_chat_id || '',
         date_of_birth:    d.date_of_birth ? d.date_of_birth.slice(0, 10) : '',
-        gender:           d.gender || '',
+        gender:           d.gender      || '',
+        nik_number:       d.nik_number  || '',
+        passport_id:      d.passport_id || '',
       });
       setSavedAvatar(d.avatar || '');
     }).catch(() => {});
@@ -161,6 +163,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
     if (!prof.name.trim())             errs.name             = 'Required';
     if (!prof.employee_id.trim())      errs.employee_id      = 'Required';
     if (!prof.gender)                  errs.gender           = 'Required';
+    if (!prof.nik_number.trim())       errs.nik_number       = 'Required';
     if (!prof.campus_location)         errs.campus_location  = 'Required';
     if (!prof.unit)                    errs.unit             = 'Required';
     if (!prof.telegram_chat_id.trim()) errs.telegram_chat_id = 'Required';
@@ -414,6 +417,21 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                         {GENDER_OPTIONS.map(g => <option key={g} value={g}>{g === 'MALE' ? 'Male' : 'Female'}</option>)}
                       </select>
                       {errTip('gender', profErrors)}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">NIK Number <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <input className="form-input" value={prof.nik_number} {...fi('nik_number', profErrors)}
+                        onChange={e => setProf(p => ({ ...p, nik_number: e.target.value }))}
+                        placeholder="16-digit NIK number" />
+                      {errTip('nik_number', profErrors)}
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Passport ID</label>
+                      <input className="form-input" value={prof.passport_id}
+                        onChange={e => setProf(p => ({ ...p, passport_id: e.target.value }))}
+                        placeholder="Optional" />
                     </div>
 
                     <div className="form-group">

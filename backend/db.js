@@ -137,6 +137,8 @@ async function initDB() {
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS avatar          TEXT;`);
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS date_of_birth   DATE;`);
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS gender          TEXT;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS nik_number      TEXT;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS passport_id     TEXT;`);
     await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id     TEXT;`);
     await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS date_of_birth   DATE;`);
     // Widen passengers id_type to allow NIK & Passport
