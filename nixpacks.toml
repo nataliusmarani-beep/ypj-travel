@@ -2,10 +2,7 @@
 nixPkgs = ["nodejs_20"]
 
 [phases.build]
-cmds = [
-  "cd backend && npm install",
-  "cd frontend && npm install && npm run build"
-]
+cmds = ["cd frontend && npm install && npm run build"]
 
 [start]
 cmd = "node backend/server.js"
