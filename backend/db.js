@@ -115,6 +115,26 @@ async function initDB() {
         recipient_email TEXT,
         sent_at         TIMESTAMPTZ DEFAULT NOW()
       );
+
+      CREATE TABLE IF NOT EXISTS dependents (
+        id           SERIAL PRIMARY KEY,
+        user_id      INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        prefix       TEXT CHECK(prefix IN ('Mr','Mrs','Master','Miss')),
+        name         TEXT NOT NULL,
+        dependent_id TEXT,
+        age          INTEGER,
+        gender       TEXT CHECK(gender IN ('MALE','FEMALE')),
+        relation     TEXT NOT NULL
+                     CHECK(relation IN ('Spouse','Child','Mother','Father',
+                                        'Mother in Law','Father in Law','Assistance')),
+        ktp_number   TEXT,
+        created_at   TIMESTAMPTZ DEFAULT NOW()
+      );
+    `);
+
+    // Migrate: add campus_location to users if missing
+    await client.query(`
+      ALTER TABLE users ADD COLUMN IF NOT EXISTS campus_location TEXT;
     `);
 
     // Seed first Manager if no users exist

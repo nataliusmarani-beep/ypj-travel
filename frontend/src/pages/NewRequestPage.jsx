@@ -71,11 +71,51 @@ export default function NewRequestPage({ user }) {
   const [notes, setNotes]           = useState('');
 
   /* Step 2 */
-  const [passengers, setPassengers] = useState([emptyPassenger()]);
+  const [passengers, setPassengers]       = useState([emptyPassenger()]);
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     api.getRTIs().then(d => setRtis(d.filter(r => r.status === 'open'))).catch(() => {});
   }, []);
+
+  /* Load self + dependents from profile */
+  const loadFromProfile = async () => {
+    setProfileLoading(true);
+    try {
+      const [me, deps] = await Promise.all([api.getMe(), api.getDependents()]);
+      const list = [
+        {
+          name:        me.name        || '',
+          category:    'EMP',
+          uid:         me.employee_id || '',
+          sponsor_uid: '',
+          gender:      'MALE',
+          dob:         '',
+          id_type:     'Employee ID',
+          id_number:   me.employee_id || '',
+          email:       me.email       || '',
+          phone:       '',
+        },
+        ...deps.map(d => ({
+          name:        (d.prefix ? d.prefix + ' ' : '') + (d.name || ''),
+          category:    'DPN',
+          uid:         d.dependent_id || '',
+          sponsor_uid: me.employee_id  || '',
+          gender:      d.gender        || 'MALE',
+          dob:         '',
+          id_type:     d.ktp_number ? 'KTP' : 'Dependent ID',
+          id_number:   d.ktp_number || d.dependent_id || '',
+          email:       '',
+          phone:       '',
+        })),
+      ];
+      setPassengers(list.length > 0 ? list : [emptyPassenger()]);
+    } catch {
+      /* silent — user can fill manually */
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const resolveAirport = (val, other) => val === 'Other' ? other : val;
 
@@ -353,7 +393,17 @@ export default function NewRequestPage({ user }) {
       {/* ── Step 2: Passengers ── */}
       {step === 2 && (
         <div className="card">
-          <div className="card-title">Passengers</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <div className="card-title" style={{ margin: 0 }}>Passengers</div>
+            <button
+              className="btn btn-secondary btn-sm"
+              onClick={loadFromProfile}
+              disabled={profileLoading}
+              title="Pre-fill with your profile data and dependents"
+            >
+              {profileLoading ? 'Loading…' : '👤 Load from Profile'}
+            </button>
+          </div>
           {passengers.map((p, idx) => (
             <div key={idx} className="passenger-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>

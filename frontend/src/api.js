@@ -25,12 +25,18 @@ export const api = {
   setPassword: (b)    => req('POST',  '/auth/set-password', b),
 
   // Users
-  getUsers:    ()     => req('GET',   '/users'),
-  getMe:       ()     => req('GET',   '/users/me'),
-  updateMe:    (b)    => req('PATCH', '/users/me', b),
-  createUser:  (b)    => req('POST',  '/users', b),
-  updateUser:  (id,b) => req('PUT',   `/users/${id}`, b),
-  inviteUser:  (id)   => req('POST',  `/users/${id}/invite`),
+  getUsers:         ()      => req('GET',    '/users'),
+  getMe:            ()      => req('GET',    '/users/me'),
+  updateMe:         (b)     => req('PATCH',  '/users/me', b),
+  createUser:       (b)     => req('POST',   '/users', b),
+  updateUser:       (id,b)  => req('PUT',    `/users/${id}`, b),
+  inviteUser:       (id)    => req('POST',   `/users/${id}/invite`),
+
+  // Dependents
+  getDependents:    ()      => req('GET',    '/users/me/dependents'),
+  createDependent:  (b)     => req('POST',   '/users/me/dependents', b),
+  updateDependent:  (id,b)  => req('PUT',    `/users/me/dependents/${id}`, b),
+  deleteDependent:  (id)    => req('DELETE', `/users/me/dependents/${id}`),
 
   // Travel Requests
   getRequests: (q='') => req('GET',   `/requests${q}`),

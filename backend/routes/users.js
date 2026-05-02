@@ -19,15 +19,73 @@ router.get('/', async (req, res) => {
 // GET /api/users/me
 router.get('/me', async (req, res) => {
   const { rows } = await pool.query(
-    'SELECT id,name,email,role,employee_id,unit,telegram_chat_id FROM users WHERE id=$1', [req.user.id]
+    `SELECT id,name,email,role,employee_id,unit,campus_location,telegram_chat_id
+     FROM users WHERE id=$1`, [req.user.id]
   );
   res.json(rows[0] || {});
 });
 
 // PATCH /api/users/me
 router.patch('/me', async (req, res) => {
-  const { telegram_chat_id } = req.body;
-  await pool.query('UPDATE users SET telegram_chat_id=$1 WHERE id=$2', [telegram_chat_id || null, req.user.id]);
+  const { name, employee_id, unit, campus_location, telegram_chat_id } = req.body;
+  if (name !== undefined && !String(name).trim()) return res.status(400).json({ error: 'Name cannot be empty.' });
+  await pool.query(
+    `UPDATE users SET
+       name=$1, employee_id=$2, unit=$3, campus_location=$4, telegram_chat_id=$5
+     WHERE id=$6`,
+    [
+      name             ? String(name).trim() : null,
+      employee_id      || null,
+      unit             || 'All',
+      campus_location  || null,
+      telegram_chat_id || null,
+      req.user.id,
+    ]
+  );
+  res.json({ ok: true });
+});
+
+// ── Dependents ────────────────────────────────────────────────────────────────
+
+// GET /api/users/me/dependents
+router.get('/me/dependents', async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT id,prefix,name,dependent_id,age,gender,relation,ktp_number,created_at
+     FROM dependents WHERE user_id=$1 ORDER BY id`,
+    [req.user.id]
+  );
+  res.json(rows);
+});
+
+// POST /api/users/me/dependents
+router.post('/me/dependents', async (req, res) => {
+  const { prefix, name, dependent_id, age, gender, relation, ktp_number } = req.body;
+  if (!name || !relation) return res.status(400).json({ error: 'Name and relation are required.' });
+  const { rows } = await pool.query(
+    `INSERT INTO dependents (user_id,prefix,name,dependent_id,age,gender,relation,ktp_number)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
+    [req.user.id, prefix||null, name.trim(), dependent_id||null, age||null, gender||null, relation, ktp_number||null]
+  );
+  res.status(201).json(rows[0]);
+});
+
+// PUT /api/users/me/dependents/:id
+router.put('/me/dependents/:id', async (req, res) => {
+  const { prefix, name, dependent_id, age, gender, relation, ktp_number } = req.body;
+  if (!name || !relation) return res.status(400).json({ error: 'Name and relation are required.' });
+  const { rowCount } = await pool.query(
+    `UPDATE dependents SET prefix=$1,name=$2,dependent_id=$3,age=$4,gender=$5,relation=$6,ktp_number=$7
+     WHERE id=$8 AND user_id=$9`,
+    [prefix||null, name.trim(), dependent_id||null, age||null, gender||null, relation, ktp_number||null,
+     req.params.id, req.user.id]
+  );
+  if (!rowCount) return res.status(404).json({ error: 'Dependent not found.' });
+  res.json({ ok: true });
+});
+
+// DELETE /api/users/me/dependents/:id
+router.delete('/me/dependents/:id', async (req, res) => {
+  await pool.query('DELETE FROM dependents WHERE id=$1 AND user_id=$2', [req.params.id, req.user.id]);
   res.json({ ok: true });
 });
 
