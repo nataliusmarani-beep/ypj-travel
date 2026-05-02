@@ -13,7 +13,17 @@ const PURPOSE_OPTIONS = [
   { value: 'OTHER',  label: 'Other' },
 ];
 
-const PAYMENT_OPTIONS = ['Cash', 'Travel Benefit', 'Cobus', 'Emergency', 'Medical'];
+const PAYMENT_OPTIONS = [
+  'Cash',
+  'Travel Benefit',
+  'Travel Allowance',
+  'Special Anniversary',
+  'Family Visit',
+  'Papuan Reward',
+  'Cobus',
+  'Emergency',
+  'Medical',
+];
 
 const emptyPassenger = () => ({
   _profileKey:   '',

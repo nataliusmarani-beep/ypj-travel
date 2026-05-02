@@ -149,6 +149,10 @@ async function initDB() {
     await client.query(`ALTER TABLE passengers DROP CONSTRAINT IF EXISTS passengers_category_check`);
     await client.query(`ALTER TABLE passengers ADD  CONSTRAINT passengers_category_check
       CHECK(category IN ('EMP','DPN','VST'))`);
+    // Widen payment_method to include new options
+    await client.query(`ALTER TABLE travel_requests DROP CONSTRAINT IF EXISTS travel_requests_payment_method_check`);
+    await client.query(`ALTER TABLE travel_requests ADD  CONSTRAINT travel_requests_payment_method_check
+      CHECK(payment_method IN ('Cash','Travel Benefit','Travel Allowance','Special Anniversary','Family Visit','Papuan Reward','Cobus','Emergency','Medical',''))`);
 
     // Seed first Manager if no users exist
     const { rows } = await client.query('SELECT COUNT(*) AS n FROM users');
