@@ -134,14 +134,19 @@ async function initDB() {
 
     // Migrations
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS campus_location TEXT;`);
-    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS avatar TEXT;`);
-    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS date_of_birth DATE;`);
-    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id   TEXT;`);
-    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS date_of_birth DATE;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS avatar          TEXT;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS date_of_birth   DATE;`);
+    await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS gender          TEXT;`);
+    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id     TEXT;`);
+    await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS date_of_birth   DATE;`);
     // Widen passengers id_type to allow NIK & Passport
     await client.query(`ALTER TABLE passengers DROP CONSTRAINT IF EXISTS passengers_id_type_check`);
     await client.query(`ALTER TABLE passengers ADD  CONSTRAINT passengers_id_type_check
       CHECK(id_type IN ('NIK','KTP','Passport','Employee ID','Dependent ID',''))`);
+    // Widen passengers category to allow VST (Visitor)
+    await client.query(`ALTER TABLE passengers DROP CONSTRAINT IF EXISTS passengers_category_check`);
+    await client.query(`ALTER TABLE passengers ADD  CONSTRAINT passengers_category_check
+      CHECK(category IN ('EMP','DPN','VST'))`);
 
     // Seed first Manager if no users exist
     const { rows } = await client.query('SELECT COUNT(*) AS n FROM users');

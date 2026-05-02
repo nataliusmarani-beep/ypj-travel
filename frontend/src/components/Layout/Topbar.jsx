@@ -80,7 +80,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
   const fileRef   = useRef(null);
 
   /* ── Profile fields ── */
-  const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '', date_of_birth: '' });
+  const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '', date_of_birth: '', gender: '' });
   const [profErrors, setProfErrors] = useState({});
   const [saving, setSaving]   = useState(false);
   const [saveMsg, setSaveMsg] = useState('');
@@ -120,6 +120,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
         campus_location:  d.campus_location  || '',
         telegram_chat_id: d.telegram_chat_id || '',
         date_of_birth:    d.date_of_birth ? d.date_of_birth.slice(0, 10) : '',
+        gender:           d.gender || '',
       });
       setSavedAvatar(d.avatar || '');
     }).catch(() => {});
@@ -157,10 +158,11 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
   /* ── Profile validation ── */
   const validateProfile = () => {
     const errs = {};
-    if (!prof.name.trim())            errs.name             = 'Required';
-    if (!prof.employee_id.trim())     errs.employee_id      = 'Required';
-    if (!prof.campus_location)        errs.campus_location  = 'Required';
-    if (!prof.unit)                   errs.unit             = 'Required';
+    if (!prof.name.trim())             errs.name             = 'Required';
+    if (!prof.employee_id.trim())      errs.employee_id      = 'Required';
+    if (!prof.gender)                  errs.gender           = 'Required';
+    if (!prof.campus_location)         errs.campus_location  = 'Required';
+    if (!prof.unit)                    errs.unit             = 'Required';
     if (!prof.telegram_chat_id.trim()) errs.telegram_chat_id = 'Required';
     return errs;
   };
@@ -402,6 +404,16 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                       <label className="form-label">Date of Birth</label>
                       <input className="form-input" type="date" value={prof.date_of_birth}
                         onChange={e => setProf(p => ({ ...p, date_of_birth: e.target.value }))} />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Gender <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <select className="form-select" value={prof.gender} {...fi('gender', profErrors)}
+                        onChange={e => setProf(p => ({ ...p, gender: e.target.value }))}>
+                        <option value="">— Select —</option>
+                        {GENDER_OPTIONS.map(g => <option key={g} value={g}>{g === 'MALE' ? 'Male' : 'Female'}</option>)}
+                      </select>
+                      {errTip('gender', profErrors)}
                     </div>
 
                     <div className="form-group">
