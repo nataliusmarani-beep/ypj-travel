@@ -30,12 +30,14 @@ router.post('/logout', (_req, res) => {
 });
 
 // GET /api/auth/me
-router.get('/me', (req, res) => {
+router.get('/me', async (req, res) => {
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ error: 'Not authenticated.' });
   try {
-    const user = jwt.verify(token, SECRET);
-    res.json(user);
+    const decoded = jwt.verify(token, SECRET);
+    // Fetch live avatar (not stored in JWT)
+    const { rows } = await pool.query('SELECT avatar FROM users WHERE id=$1', [decoded.id]);
+    res.json({ ...decoded, avatar: rows[0]?.avatar || null });
   } catch {
     res.status(401).json({ error: 'Session expired.' });
   }

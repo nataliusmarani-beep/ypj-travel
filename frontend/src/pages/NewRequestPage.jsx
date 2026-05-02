@@ -436,13 +436,21 @@ export default function NewRequestPage({ user }) {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">UID</label>
-                  <input className="form-input" value={p.uid} onChange={e => updatePassenger(idx, 'uid', e.target.value)} placeholder="e.g. 12345 or 12345-01" />
+                  <label className="form-label">UID {p.category === 'EMP' ? '(Employee ID)' : '(Dependent ID)'}</label>
+                  <input
+                    className="form-input"
+                    value={p.uid}
+                    onChange={e => updatePassenger(idx, 'uid', e.target.value)}
+                    placeholder={p.category === 'EMP' ? 'e.g. 0000910439' : 'e.g. 0000910439-03'}
+                  />
+                  <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>
+                    {p.category === 'EMP' ? 'Format: 0000910439' : 'Format: 0000910439-03 (employee ID + sequence)'}
+                  </div>
                 </div>
                 {p.category === 'DPN' && (
                   <div className="form-group">
-                    <label className="form-label">Sponsor UID</label>
-                    <input className="form-input" value={p.sponsor_uid} onChange={e => updatePassenger(idx, 'sponsor_uid', e.target.value)} placeholder="Employee UID of sponsor" />
+                    <label className="form-label">Sponsor UID (Employee ID)</label>
+                    <input className="form-input" value={p.sponsor_uid} onChange={e => updatePassenger(idx, 'sponsor_uid', e.target.value)} placeholder="e.g. 0000910439" />
                   </div>
                 )}
                 <div className="form-group">
@@ -462,7 +470,12 @@ export default function NewRequestPage({ user }) {
                 </div>
                 <div className="form-group">
                   <label className="form-label">ID Number</label>
-                  <input className="form-input" value={p.id_number} onChange={e => updatePassenger(idx, 'id_number', e.target.value)} placeholder="ID number" />
+                  <input
+                    className="form-input"
+                    value={p.id_number}
+                    onChange={e => updatePassenger(idx, 'id_number', e.target.value)}
+                    placeholder={p.id_type === 'KTP' ? '16-digit KTP number' : p.category === 'DPN' ? 'e.g. 0000910439-03' : 'e.g. 0000910439'}
+                  />
                 </div>
               </div>
 

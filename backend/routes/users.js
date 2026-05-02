@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 // GET /api/users/me
 router.get('/me', async (req, res) => {
   const { rows } = await pool.query(
-    `SELECT id,name,email,role,employee_id,unit,campus_location,telegram_chat_id
+    `SELECT id,name,email,role,employee_id,unit,campus_location,telegram_chat_id,avatar
      FROM users WHERE id=$1`, [req.user.id]
   );
   res.json(rows[0] || {});
@@ -27,18 +27,19 @@ router.get('/me', async (req, res) => {
 
 // PATCH /api/users/me
 router.patch('/me', async (req, res) => {
-  const { name, employee_id, unit, campus_location, telegram_chat_id } = req.body;
+  const { name, employee_id, unit, campus_location, telegram_chat_id, avatar } = req.body;
   if (name !== undefined && !String(name).trim()) return res.status(400).json({ error: 'Name cannot be empty.' });
   await pool.query(
     `UPDATE users SET
-       name=$1, employee_id=$2, unit=$3, campus_location=$4, telegram_chat_id=$5
-     WHERE id=$6`,
+       name=$1, employee_id=$2, unit=$3, campus_location=$4, telegram_chat_id=$5, avatar=$6
+     WHERE id=$7`,
     [
       name             ? String(name).trim() : null,
       employee_id      || null,
-      unit             || 'All',
+      unit             || 'PAUD',
       campus_location  || null,
       telegram_chat_id || null,
+      avatar           || null,
       req.user.id,
     ]
   );
