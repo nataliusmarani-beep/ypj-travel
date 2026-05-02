@@ -136,6 +136,10 @@ async function initDB() {
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS campus_location TEXT;`);
     await client.query(`ALTER TABLE users      ADD COLUMN IF NOT EXISTS avatar TEXT;`);
     await client.query(`ALTER TABLE dependents ADD COLUMN IF NOT EXISTS passport_id TEXT;`);
+    // Widen passengers id_type to allow NIK & Passport
+    await client.query(`ALTER TABLE passengers DROP CONSTRAINT IF EXISTS passengers_id_type_check`);
+    await client.query(`ALTER TABLE passengers ADD  CONSTRAINT passengers_id_type_check
+      CHECK(id_type IN ('NIK','KTP','Passport','Employee ID','Dependent ID',''))`);
 
     // Seed first Manager if no users exist
     const { rows } = await client.query('SELECT COUNT(*) AS n FROM users');
