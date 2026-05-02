@@ -28,33 +28,53 @@ export default function LoginPage({ onLogin }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #2563eb 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 16,
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      {/* Decorative circles */}
+      <div style={{ position: 'absolute', top: -80, left: -80, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
+      <div style={{ position: 'absolute', bottom: -60, right: -60, width: 250, height: 250, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
+      <div style={{ position: 'absolute', top: '40%', right: '10%', width: 150, height: 150, borderRadius: '50%', background: 'rgba(255,255,255,.03)' }} />
+
       <div style={{
         background: 'white',
-        borderRadius: 16,
-        border: '1px solid var(--border)',
-        padding: '40px 36px',
+        borderRadius: 24,
+        padding: '44px 40px',
         width: '100%',
-        maxWidth: 380,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+        maxWidth: 400,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
+        position: 'relative',
       }}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>✈️</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>YPJ Travel</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>Campus Travel System</div>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 20,
+            background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 34, margin: '0 auto 16px',
+            boxShadow: '0 8px 24px rgba(37,99,235,.35)',
+          }}>✈️</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)', letterSpacing: -0.5 }}>YPJ Travel</div>
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, fontWeight: 500 }}>Campus Travel Management System</div>
         </div>
 
-        {error && <div className="error-box">{error}</div>}
+        {error && (
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
+            padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#dc2626',
+          }}>
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label className="form-label">Email</label>
+            <label className="form-label">Email Address</label>
             <input
               className="form-input"
               type="email"
@@ -63,6 +83,7 @@ export default function LoginPage({ onLogin }) {
               onChange={e => setEmail(e.target.value)}
               placeholder="you@ypj.sch.id"
               disabled={loading}
+              style={{ borderRadius: 10 }}
             />
           </div>
 
@@ -76,27 +97,32 @@ export default function LoginPage({ onLogin }) {
               onChange={e => setPassword(e.target.value)}
               placeholder="Your password"
               disabled={loading}
+              style={{ borderRadius: 10 }}
             />
           </div>
 
           <button
             type="submit"
-            className="btn btn-primary"
-            style={{ width: '100%', justifyContent: 'center', padding: '10px 16px', marginTop: 4 }}
+            style={{
+              width: '100%', marginTop: 8, padding: '12px 16px',
+              background: loading ? '#93c5fd' : 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+              color: '#fff', fontWeight: 700, fontSize: 15,
+              border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: '0 4px 14px rgba(37,99,235,.4)',
+              transition: 'opacity .15s',
+            }}
             disabled={loading}
           >
-            {loading ? 'Signing in…' : 'Sign In'}
+            {loading ? 'Signing in…' : 'Sign In →'}
           </button>
         </form>
 
         <div style={{
-          marginTop: 20,
-          fontSize: 12,
-          color: 'var(--muted)',
-          textAlign: 'center',
-          lineHeight: 1.5,
+          marginTop: 24, fontSize: 12, color: 'var(--muted)',
+          textAlign: 'center', lineHeight: 1.6,
+          borderTop: '1px solid var(--border)', paddingTop: 16,
         }}>
-          Use your school email and the password given by your administrator.
+          Use your school email and the password provided by your administrator.
         </div>
       </div>
     </div>

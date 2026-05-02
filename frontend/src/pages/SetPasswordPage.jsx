@@ -40,39 +40,72 @@ export default function SetPasswordPage() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'var(--bg)',
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e3a5f 50%, #0d9488 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       padding: 16,
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      <div style={{ position: 'absolute', top: -80, left: -80, width: 300, height: 300, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
+      <div style={{ position: 'absolute', bottom: -60, right: -60, width: 250, height: 250, borderRadius: '50%', background: 'rgba(255,255,255,.04)' }} />
+
       <div style={{
         background: 'white',
-        borderRadius: 16,
-        border: '1px solid var(--border)',
-        padding: '40px 36px',
+        borderRadius: 24,
+        padding: '44px 40px',
         width: '100%',
-        maxWidth: 380,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+        maxWidth: 400,
+        boxShadow: '0 24px 64px rgba(0,0,0,0.3)',
+        position: 'relative',
       }}>
-        <div style={{ textAlign: 'center', marginBottom: 28 }}>
-          <div style={{ fontSize: 40, marginBottom: 10 }}>✈️</div>
-          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)' }}>YPJ Travel</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4 }}>Set Your Password</div>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{
+            width: 72, height: 72, borderRadius: 20,
+            background: 'linear-gradient(135deg, #1e3a5f, #0d9488)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 34, margin: '0 auto 16px',
+            boxShadow: '0 8px 24px rgba(13,148,136,.35)',
+          }}>✈️</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)', letterSpacing: -0.5 }}>YPJ Travel</div>
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, fontWeight: 500 }}>Set Your Password</div>
         </div>
 
         {success ? (
           <div>
-            <div className="success-box">
-              Password set successfully! You can now sign in with your new password.
+            <div style={{
+              background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12,
+              padding: '16px 20px', marginBottom: 20, textAlign: 'center',
+            }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+              <div style={{ fontWeight: 700, color: '#15803d', fontSize: 14 }}>Password set successfully!</div>
+              <div style={{ fontSize: 12, color: '#16a34a', marginTop: 4 }}>You can now sign in with your new password.</div>
             </div>
-            <Link to="/login" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', display: 'flex', marginTop: 8 }}>
-              Go to Sign In
+            <Link
+              to="/login"
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: '100%', padding: '12px 16px', marginTop: 8,
+                background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+                color: '#fff', fontWeight: 700, fontSize: 15,
+                border: 'none', borderRadius: 12, textDecoration: 'none',
+                boxShadow: '0 4px 14px rgba(37,99,235,.4)',
+              }}
+            >
+              Go to Sign In →
             </Link>
           </div>
         ) : (
           <>
-            {error && <div className="error-box">{error}</div>}
+            {error && (
+              <div style={{
+                background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 10,
+                padding: '10px 14px', marginBottom: 18, fontSize: 13, color: '#dc2626',
+              }}>
+                {error}
+              </div>
+            )}
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label className="form-label">New Password</label>
@@ -84,6 +117,7 @@ export default function SetPasswordPage() {
                   onChange={e => setPassword(e.target.value)}
                   placeholder="At least 6 characters"
                   disabled={loading}
+                  style={{ borderRadius: 10 }}
                 />
               </div>
               <div className="form-group">
@@ -96,15 +130,21 @@ export default function SetPasswordPage() {
                   onChange={e => setConfirm(e.target.value)}
                   placeholder="Repeat your password"
                   disabled={loading}
+                  style={{ borderRadius: 10 }}
                 />
               </div>
               <button
                 type="submit"
-                className="btn btn-primary"
-                style={{ width: '100%', justifyContent: 'center', padding: '10px 16px', marginTop: 4 }}
+                style={{
+                  width: '100%', marginTop: 8, padding: '12px 16px',
+                  background: loading ? '#93c5fd' : 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+                  color: '#fff', fontWeight: 700, fontSize: 15,
+                  border: 'none', borderRadius: 12, cursor: loading ? 'not-allowed' : 'pointer',
+                  boxShadow: '0 4px 14px rgba(37,99,235,.4)',
+                }}
                 disabled={loading}
               >
-                {loading ? 'Saving…' : 'Save Password'}
+                {loading ? 'Saving…' : 'Save Password →'}
               </button>
             </form>
           </>

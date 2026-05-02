@@ -7,22 +7,37 @@ function fmtDate(d) {
 }
 
 const STATUS_MAP = {
-  submitted:        { cls: 'badge-blue',   label: 'Submitted' },
-  processing:       { cls: 'badge-amber',  label: 'Processing' },
-  booked:           { cls: 'badge-teal',   label: 'Booked' },
-  awaiting_payment: { cls: 'badge-orange', label: 'Awaiting Payment' },
-  confirmed:        { cls: 'badge-green',  label: 'Confirmed' },
-  cancelled:        { cls: 'badge-red',    label: 'Cancelled' },
+  submitted:        { color: '#2563eb', bg: '#dbeafe', label: 'Submitted' },
+  processing:       { color: '#d97706', bg: '#fef3c7', label: 'Processing' },
+  booked:           { color: '#0d9488', bg: '#ccfbf1', label: 'Booked' },
+  awaiting_payment: { color: '#ea580c', bg: '#ffedd5', label: 'Awaiting Payment' },
+  confirmed:        { color: '#16a34a', bg: '#dcfce7', label: 'Confirmed' },
+  cancelled:        { color: '#dc2626', bg: '#fee2e2', label: 'Cancelled' },
+};
+
+const PURPOSE_LABEL = {
+  VAC: 'Vacation', EMG: 'Emergency', MED: 'Medical',
+  COBUS: 'Company Business', FAMILY: 'Family', OTHER: 'Other',
 };
 
 const PURPOSE_OPTIONS = ['VAC', 'EMG', 'MED', 'COBUS', 'FAMILY', 'OTHER'];
+
+function StatusPill({ status }) {
+  const s = STATUS_MAP[status] || { color: '#64748b', bg: '#f1f5f9', label: status };
+  return (
+    <span style={{
+      display: 'inline-block', padding: '3px 11px', borderRadius: 20,
+      fontSize: 11, fontWeight: 700, letterSpacing: 0.3,
+      color: s.color, background: s.bg,
+    }}>{s.label}</span>
+  );
+}
 
 export default function AllRequestsPage({ user }) {
   const [requests, setRequests]   = useState([]);
   const [loading, setLoading]     = useState(true);
   const [error, setError]         = useState('');
 
-  /* Filters */
   const [fStatus, setFStatus]     = useState('');
   const [fPurpose, setFPurpose]   = useState('');
   const [fTransport, setFTransport] = useState('');
@@ -30,16 +45,14 @@ export default function AllRequestsPage({ user }) {
   const [fDateTo, setFDateTo]     = useState('');
   const [fSearch, setFSearch]     = useState('');
 
-  /* Detail / Status modal */
   const [expanded, setExpanded]   = useState(null);
   const [detail, setDetail]       = useState({});
-  const [statusModal, setStatusModal] = useState(null); // request object
+  const [statusModal, setStatusModal] = useState(null);
   const [newStatus, setNewStatus] = useState('');
   const [picNotes, setPicNotes]   = useState('');
   const [updating, setUpdating]   = useState(false);
 
-  /* Passenger edit modal */
-  const [paxModal, setPaxModal]   = useState(null); // {requestId, passenger}
+  const [paxModal, setPaxModal]   = useState(null);
   const [paxBooking, setPaxBooking] = useState('');
   const [paxSeat, setPaxSeat]     = useState('');
   const [savingPax, setSavingPax] = useState(false);
@@ -104,7 +117,7 @@ export default function AllRequestsPage({ user }) {
   const handleSavePax = async () => {
     setSavingPax(true);
     try {
-      const updated = await api.updatePassenger(paxModal.requestId, paxModal.pax.id, {
+      await api.updatePassenger(paxModal.requestId, paxModal.pax.id, {
         booking_ref: paxBooking, seat_number: paxSeat,
       });
       setDetail(prev => {
@@ -114,7 +127,9 @@ export default function AllRequestsPage({ user }) {
           ...prev,
           [paxModal.requestId]: {
             ...d,
-            passengers: d.passengers.map(p => p.id === paxModal.pax.id ? { ...p, booking_ref: paxBooking, seat_number: paxSeat } : p),
+            passengers: d.passengers.map(p =>
+              p.id === paxModal.pax.id ? { ...p, booking_ref: paxBooking, seat_number: paxSeat } : p
+            ),
           },
         };
       });
@@ -142,61 +157,100 @@ export default function AllRequestsPage({ user }) {
 
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <div className="page-title">All Requests</div>
-          <div className="page-subtitle">Manage and process travel requests</div>
+      {/* Page Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #0d9488 100%)',
+        borderRadius: 20, padding: '24px 28px', marginBottom: 24,
+        boxShadow: '0 4px 20px rgba(30,58,95,.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12, position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', right: -30, top: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+            📋 Management
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>All Travel Requests</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>Manage and process all staff travel requests</div>
         </div>
-        <button className="btn btn-success" onClick={handleExport}>⬇️ Export Excel</button>
+        <button
+          onClick={handleExport}
+          style={{
+            background: '#fff', color: 'var(--navy)',
+            fontWeight: 700, padding: '10px 20px', borderRadius: 12,
+            border: 'none', fontSize: 13, cursor: 'pointer',
+            boxShadow: '0 2px 8px rgba(0,0,0,.15)', position: 'relative',
+          }}
+        >
+          ⬇️ Export Excel
+        </button>
       </div>
 
-      {error && <div className="error-box">{error}</div>}
+      {error && (
+        <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12, padding: '12px 16px', marginBottom: 16, fontSize: 13, color: '#dc2626' }}>
+          {error}
+        </div>
+      )}
 
       {/* Filters */}
-      <div className="card" style={{ padding: '16px 20px', marginBottom: 16 }}>
-        <div className="filter-bar">
+      <div style={{
+        background: '#fff', borderRadius: 14, padding: '16px 20px', marginBottom: 16,
+        boxShadow: '0 1px 3px rgba(0,0,0,.06), 0 4px 12px rgba(0,0,0,.03)',
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+          🔍 Filters
+        </div>
+        <div className="filter-bar" style={{ flexWrap: 'wrap' }}>
           <div className="form-group">
             <label className="form-label">Status</label>
-            <select className="form-select" value={fStatus} onChange={e => setFStatus(e.target.value)} style={{ width: 160 }}>
+            <select className="form-select" value={fStatus} onChange={e => setFStatus(e.target.value)} style={{ width: 160, borderRadius: 8 }}>
               <option value="">All</option>
               {Object.entries(STATUS_MAP).map(([v,{label}]) => <option key={v} value={v}>{label}</option>)}
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Purpose</label>
-            <select className="form-select" value={fPurpose} onChange={e => setFPurpose(e.target.value)} style={{ width: 130 }}>
+            <select className="form-select" value={fPurpose} onChange={e => setFPurpose(e.target.value)} style={{ width: 130, borderRadius: 8 }}>
               <option value="">All</option>
               {PURPOSE_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Transport</label>
-            <select className="form-select" value={fTransport} onChange={e => setFTransport(e.target.value)} style={{ width: 120 }}>
+            <select className="form-select" value={fTransport} onChange={e => setFTransport(e.target.value)} style={{ width: 120, borderRadius: 8 }}>
               <option value="">All</option>
-              <option value="Plane">Plane</option>
-              <option value="Bus">Bus</option>
-              <option value="Both">Both</option>
+              <option value="plane">Plane</option>
+              <option value="bus">Bus</option>
+              <option value="both">Both</option>
             </select>
           </div>
           <div className="form-group">
             <label className="form-label">Date From</label>
-            <input className="form-input" type="date" value={fDateFrom} onChange={e => setFDateFrom(e.target.value)} style={{ width: 140 }} />
+            <input className="form-input" type="date" value={fDateFrom} onChange={e => setFDateFrom(e.target.value)} style={{ width: 140, borderRadius: 8 }} />
           </div>
           <div className="form-group">
             <label className="form-label">Date To</label>
-            <input className="form-input" type="date" value={fDateTo} onChange={e => setFDateTo(e.target.value)} style={{ width: 140 }} />
+            <input className="form-input" type="date" value={fDateTo} onChange={e => setFDateTo(e.target.value)} style={{ width: 140, borderRadius: 8 }} />
           </div>
           <div className="form-group">
             <label className="form-label">Search</label>
-            <input className="form-input" placeholder="Name, route…" value={fSearch} onChange={e => setFSearch(e.target.value)} style={{ width: 160 }} />
+            <input className="form-input" placeholder="Name, route…" value={fSearch} onChange={e => setFSearch(e.target.value)} style={{ width: 160, borderRadius: 8 }} />
           </div>
         </div>
       </div>
 
       {loading ? (
-        <div style={{ color: 'var(--muted)' }}>Loading…</div>
+        <div style={{ display: 'flex', justifyContent: 'center', padding: 60, color: 'var(--muted)' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>✈️</div>
+            <div style={{ fontSize: 14 }}>Loading requests…</div>
+          </div>
+        </div>
       ) : (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
+        <div style={{
+          background: '#fff', borderRadius: 16, overflow: 'hidden',
+          boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+        }}>
           <table className="table">
             <thead>
               <tr>
@@ -205,7 +259,7 @@ export default function AllRequestsPage({ user }) {
                 <th>Submitter</th>
                 <th>Route</th>
                 <th>Date</th>
-                <th>Pax</th>
+                <th style={{ textAlign: 'center' }}>Pax</th>
                 <th>Purpose</th>
                 <th>Status</th>
                 <th>Actions</th>
@@ -213,32 +267,44 @@ export default function AllRequestsPage({ user }) {
             </thead>
             <tbody>
               {requests.length === 0 && (
-                <tr><td colSpan={9} style={{ textAlign: 'center', color: 'var(--muted)', padding: 32 }}>No requests found.</td></tr>
+                <tr>
+                  <td colSpan={9} style={{ textAlign: 'center', color: 'var(--muted)', padding: 48 }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+                    <div>No requests found for the selected filters.</div>
+                  </td>
+                </tr>
               )}
               {requests.map((r, idx) => {
-                const sb     = STATUS_MAP[r.status] || { cls: 'badge-grey', label: r.status };
                 const isOpen = expanded === r.id;
                 const det    = detail[r.id];
                 return (
                   <>
                     <tr key={r.id}>
-                      <td style={{ color: 'var(--muted)', fontWeight: 600 }}>{idx + 1}</td>
-                      <td>{fmtDate(r.created_at)}</td>
-                      <td>{r.submitter_name || r.user_name || '—'}</td>
+                      <td style={{ color: 'var(--muted)', fontWeight: 600, width: 40 }}>{idx + 1}</td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                      <td style={{ fontWeight: 600 }}>{r.submitter_name || r.user_name || '—'}</td>
                       <td>
-                        {r.outbound_from} → {r.outbound_to}
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{r.outbound_from} → {r.outbound_to}</div>
                         {r.has_return && <div style={{ fontSize: 11, color: 'var(--muted)' }}>↩ {r.inbound_from} → {r.inbound_to}</div>}
                       </td>
-                      <td>{fmtDate(r.outbound_date)}</td>
-                      <td>{r.passenger_count ?? '—'}</td>
-                      <td>{r.purpose}</td>
-                      <td><span className={`badge ${sb.cls}`}>{sb.label}</span></td>
+                      <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(r.outbound_date)}</td>
+                      <td style={{ textAlign: 'center' }}>{r.passenger_count ?? '—'}</td>
+                      <td style={{ fontSize: 12 }}>{PURPOSE_LABEL[r.travel_purpose] || r.travel_purpose || r.purpose}</td>
+                      <td><StatusPill status={r.status} /></td>
                       <td>
                         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                          <button className="btn btn-secondary btn-sm" onClick={() => loadDetail(r.id)}>
+                          <button
+                            className="btn btn-secondary btn-sm"
+                            style={{ borderRadius: 8, fontSize: 11 }}
+                            onClick={() => loadDetail(r.id)}
+                          >
                             {isOpen ? '▲' : '▼'} Details
                           </button>
-                          <button className="btn btn-primary btn-sm" onClick={() => openStatusModal(r)}>
+                          <button
+                            className="btn btn-primary btn-sm"
+                            style={{ borderRadius: 8, fontSize: 11 }}
+                            onClick={() => openStatusModal(r)}
+                          >
                             Update
                           </button>
                         </div>
@@ -246,34 +312,61 @@ export default function AllRequestsPage({ user }) {
                     </tr>
                     {isOpen && det && (
                       <tr key={`${r.id}-det`}>
-                        <td colSpan={9} style={{ background: '#f8fafc', padding: '14px 16px' }}>
-                          {det.pic_notes && <div style={{ marginBottom: 8, fontSize: 13 }}><strong>PIC Notes:</strong> {det.pic_notes}</div>}
-                          {det.notes     && <div style={{ marginBottom: 8, fontSize: 13 }}><strong>Notes:</strong> {det.notes}</div>}
-                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 8 }}>Passengers</div>
-                          <table className="table" style={{ fontSize: 12 }}>
-                            <thead>
-                              <tr>
-                                <th>Name</th><th>Cat</th><th>UID</th><th>Gender</th>
-                                <th>ID</th><th>Booking Ref</th><th>Seat</th><th></th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {(det.passengers || []).map(p => (
-                                <tr key={p.id}>
-                                  <td>{p.name}</td>
-                                  <td>{p.category}</td>
-                                  <td>{p.uid}</td>
-                                  <td>{p.gender}</td>
-                                  <td>{p.id_type}: {p.id_number}</td>
-                                  <td>{p.booking_ref || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
-                                  <td>{p.seat_number || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
-                                  <td>
-                                    <button className="btn btn-ghost btn-sm" onClick={() => openPaxModal(r.id, p)}>Edit</button>
-                                  </td>
+                        <td colSpan={9} style={{ background: '#f8fafc', padding: '16px 20px' }}>
+                          {det.pic_notes && (
+                            <div style={{
+                              background: '#fffbeb', border: '1px solid #fde68a',
+                              borderRadius: 8, padding: '8px 14px', marginBottom: 12, fontSize: 13,
+                            }}>
+                              <strong style={{ color: '#92400e' }}>PIC Notes:</strong> <span style={{ color: '#78350f' }}>{det.pic_notes}</span>
+                            </div>
+                          )}
+                          {det.notes && (
+                            <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text)' }}>
+                              <strong>Notes:</strong> {det.notes}
+                            </div>
+                          )}
+                          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                            Passengers
+                          </div>
+                          <div style={{ overflowX: 'auto' }}>
+                            <table className="table" style={{ fontSize: 12 }}>
+                              <thead>
+                                <tr>
+                                  <th>Name</th><th>Cat</th><th>UID</th><th>Gender</th>
+                                  <th>ID</th><th>Booking Ref</th><th>Seat</th><th></th>
                                 </tr>
-                              ))}
-                            </tbody>
-                          </table>
+                              </thead>
+                              <tbody>
+                                {(det.passengers || []).map(p => (
+                                  <tr key={p.id}>
+                                    <td style={{ fontWeight: 600 }}>{p.name}</td>
+                                    <td>
+                                      <span style={{
+                                        padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                                        background: p.category === 'EMP' ? '#dbeafe' : p.category === 'DPN' ? '#fef3c7' : '#f3e8ff',
+                                        color: p.category === 'EMP' ? '#1d4ed8' : p.category === 'DPN' ? '#b45309' : '#7c3aed',
+                                      }}>{p.category}</span>
+                                    </td>
+                                    <td>{p.uid || '—'}</td>
+                                    <td>{p.gender || '—'}</td>
+                                    <td>{p.id_type}: {p.id_number}</td>
+                                    <td>{p.booking_ref || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
+                                    <td>{p.seat_number || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
+                                    <td>
+                                      <button
+                                        className="btn btn-ghost btn-sm"
+                                        style={{ fontSize: 11, borderRadius: 8 }}
+                                        onClick={() => openPaxModal(r.id, p)}
+                                      >
+                                        Edit
+                                      </button>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
                         </td>
                       </tr>
                     )}
@@ -288,30 +381,33 @@ export default function AllRequestsPage({ user }) {
       {/* Status Update Modal */}
       {statusModal && (
         <div className="modal-overlay" onClick={() => setStatusModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 20 }}>
             <div className="modal-header">
-              <div className="modal-title">Update Status</div>
+              <div className="modal-title">Update Request Status</div>
               <button className="modal-close" onClick={() => setStatusModal(null)}>✕</button>
             </div>
             <div className="modal-body">
-              <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 16 }}>
-                {statusModal.submitter_name || statusModal.user_name} — {statusModal.outbound_from} → {statusModal.outbound_to}
+              <div style={{
+                background: '#f8fafc', borderRadius: 10, padding: '10px 14px',
+                marginBottom: 16, fontSize: 13, color: 'var(--navy)', fontWeight: 600,
+              }}>
+                {statusModal.submitter_name || statusModal.user_name} · {statusModal.outbound_from} → {statusModal.outbound_to}
               </div>
               <div className="form-group">
                 <label className="form-label">New Status</label>
-                <select className="form-select" value={newStatus} onChange={e => setNewStatus(e.target.value)}>
+                <select className="form-select" style={{ borderRadius: 10 }} value={newStatus} onChange={e => setNewStatus(e.target.value)}>
                   {Object.entries(STATUS_MAP).map(([v,{label}]) => <option key={v} value={v}>{label}</option>)}
                 </select>
               </div>
               <div className="form-group">
                 <label className="form-label">PIC Notes</label>
-                <textarea className="form-textarea" value={picNotes} onChange={e => setPicNotes(e.target.value)} placeholder="Optional notes for the staff member…" />
+                <textarea className="form-textarea" style={{ borderRadius: 10 }} value={picNotes} onChange={e => setPicNotes(e.target.value)} placeholder="Optional notes visible to the staff member…" />
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setStatusModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleUpdateStatus} disabled={updating}>
-                {updating ? 'Saving…' : 'Save'}
+              <button className="btn btn-secondary" style={{ borderRadius: 10 }} onClick={() => setStatusModal(null)}>Cancel</button>
+              <button className="btn btn-primary" style={{ borderRadius: 10 }} onClick={handleUpdateStatus} disabled={updating}>
+                {updating ? 'Saving…' : 'Save Changes'}
               </button>
             </div>
           </div>
@@ -321,7 +417,7 @@ export default function AllRequestsPage({ user }) {
       {/* Passenger Edit Modal */}
       {paxModal && (
         <div className="modal-overlay" onClick={() => setPaxModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 20 }}>
             <div className="modal-header">
               <div className="modal-title">Edit Passenger — {paxModal.pax.name}</div>
               <button className="modal-close" onClick={() => setPaxModal(null)}>✕</button>
@@ -329,16 +425,16 @@ export default function AllRequestsPage({ user }) {
             <div className="modal-body">
               <div className="form-group">
                 <label className="form-label">Booking Reference</label>
-                <input className="form-input" value={paxBooking} onChange={e => setPaxBooking(e.target.value)} placeholder="e.g. ABC123" />
+                <input className="form-input" style={{ borderRadius: 10 }} value={paxBooking} onChange={e => setPaxBooking(e.target.value)} placeholder="e.g. ABC123" />
               </div>
               <div className="form-group">
                 <label className="form-label">Seat Number</label>
-                <input className="form-input" value={paxSeat} onChange={e => setPaxSeat(e.target.value)} placeholder="e.g. 12A" />
+                <input className="form-input" style={{ borderRadius: 10 }} value={paxSeat} onChange={e => setPaxSeat(e.target.value)} placeholder="e.g. 12A" />
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setPaxModal(null)}>Cancel</button>
-              <button className="btn btn-primary" onClick={handleSavePax} disabled={savingPax}>
+              <button className="btn btn-secondary" style={{ borderRadius: 10 }} onClick={() => setPaxModal(null)}>Cancel</button>
+              <button className="btn btn-primary" style={{ borderRadius: 10 }} onClick={handleSavePax} disabled={savingPax}>
                 {savingPax ? 'Saving…' : 'Save'}
               </button>
             </div>
