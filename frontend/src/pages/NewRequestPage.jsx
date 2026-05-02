@@ -199,6 +199,8 @@ export default function NewRequestPage({ user }) {
         if (p.category === 'DPN' && !p.uid.trim())         return `${n}: Dependent ID is required.`;
         if (p.category === 'DPN' && !p.sponsor_uid.trim()) return `${n}: Sponsor UID is required.`;
       }
+      if (!p.email.trim())  return `${n}: Contact email is required.`;
+      if (!p.phone.trim())  return `${n}: Phone / mobile number is required.`;
     }
     return '';
   };
@@ -245,8 +247,8 @@ export default function NewRequestPage({ user }) {
           dob:         p.dob         || null,
           id_type:     p.other_id_type,
           id_number:   p.id_number.trim(),
-          email:       p.email.trim() || null,
-          phone:       p.phone.trim() || null,
+          email:       p.email.trim(),
+          phone:       p.phone.trim(),
         })),
       };
       const result = await api.submitRequest(payload);
@@ -655,15 +657,19 @@ export default function NewRequestPage({ user }) {
                 </>
               )}
 
-              {/* Contact Email + Phone — always manual */}
+              {/* Contact Email + Phone — always manual, always mandatory */}
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Contact Email</label>
-                  <input className="form-input" type="email" value={p.email} onChange={e => updatePassenger(idx, 'email', e.target.value)} placeholder="email@example.com" />
+                  <label className="form-label">Contact Email <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input className="form-input" type="email" value={p.email}
+                    onChange={e => updatePassenger(idx, 'email', e.target.value)}
+                    placeholder="Preferred to personal email (active)" />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Phone / Mobile</label>
-                  <input className="form-input" value={p.phone} onChange={e => updatePassenger(idx, 'phone', e.target.value)} placeholder="+62 …" />
+                  <label className="form-label">Phone / Mobile <span style={{ color: 'var(--danger)' }}>*</span></label>
+                  <input className="form-input" value={p.phone}
+                    onChange={e => updatePassenger(idx, 'phone', e.target.value)}
+                    placeholder="The active number" />
                 </div>
               </div>
             </div>
