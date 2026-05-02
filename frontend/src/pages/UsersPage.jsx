@@ -320,12 +320,15 @@ export default function UsersPage({ user }) {
               </div>
               <div className="form-group">
                 <label className="form-label">Unit / Department</label>
-                <input
-                  className="form-input" style={{ borderRadius: 10 }}
+                <select
+                  className="form-select" style={{ borderRadius: 10 }}
                   value={form.unit}
                   onChange={e => setField('unit', e.target.value)}
-                  placeholder="e.g. SD SMP"
-                />
+                >
+                  <option value="">— Select —</option>
+                  <option value="Teacher">Teacher</option>
+                  <option value="Administration">Administration</option>
+                </select>
               </div>
 
               {/* ── Employment Details ── */}
@@ -339,7 +342,7 @@ export default function UsersPage({ user }) {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Date of Hire (DOH)</label>
+                  <label className="form-label">Date of Hire</label>
                   <input
                     className="form-input" style={{ borderRadius: 10 }}
                     type="date"
