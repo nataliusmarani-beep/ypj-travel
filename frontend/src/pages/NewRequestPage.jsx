@@ -522,12 +522,20 @@ export default function NewRequestPage({ user }) {
                     </div>
                   </div>
 
-                  {/* Sponsor UID — auto, mandatory */}
-                  <div className="form-group" style={{ marginBottom: 10 }}>
-                    <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input className="form-input" value={myEmployeeId} readOnly
-                      style={{ background: '#f1f5f9', color: 'var(--muted)' }} />
-                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Auto-filled from your profile</div>
+                  {/* Visitor ID + Sponsor UID */}
+                  <div className="form-row" style={{ marginBottom: 10 }}>
+                    <div className="form-group">
+                      <label className="form-label">Visitor ID</label>
+                      <input className="form-input" value={p.uid}
+                        onChange={e => updatePassenger(idx, 'uid', e.target.value)}
+                        placeholder="Visitor ID / Badge number" />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <input className="form-input" value={myEmployeeId} readOnly
+                        style={{ background: '#f1f5f9', color: 'var(--muted)' }} />
+                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Auto-filled from your profile</div>
+                    </div>
                   </div>
 
                   {/* Other ID Type + Number — manual */}
