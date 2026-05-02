@@ -8,7 +8,7 @@ const PURPOSE_OPTIONS = [
   { value: 'VAC',    label: 'Vacation' },
   { value: 'EMG',    label: 'Emergency' },
   { value: 'MED',    label: 'Medical' },
-  { value: 'COBUS',  label: 'Cobus' },
+  { value: 'COBUS',  label: 'Company Business' },
   { value: 'FAMILY', label: 'Family' },
   { value: 'OTHER',  label: 'Other' },
 ];
@@ -33,34 +33,105 @@ const emptyPassenger = () => ({
   phone:         '',
 });
 
-const isChild    = p => p._prefix === 'Master' || p._prefix === 'Miss';
+const isChild     = p => p._prefix === 'Master' || p._prefix === 'Miss';
 const genderLabel = g => g === 'MALE' ? 'Male' : g === 'FEMALE' ? 'Female' : '';
 
+/* ── Modern Step Indicator ── */
 function StepIndicator({ step }) {
-  const steps = ['Trip Details', 'Passengers', 'Review & Submit'];
+  const steps = [
+    { label: 'Trip Details', icon: '✈️' },
+    { label: 'Passengers',   icon: '👤' },
+    { label: 'Review & Submit', icon: '✅' },
+  ];
   return (
-    <div className="step-indicator">
-      {steps.map((s, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div className={`step ${step === i + 1 ? 'active' : step > i + 1 ? 'done' : ''}`}>
-            <div className="step-num">{step > i + 1 ? '✓' : i + 1}</div>
-            <span style={{ fontSize: 13 }}>{s}</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 0,
+      background: '#fff', borderRadius: 14, padding: '16px 24px',
+      marginBottom: 24,
+      boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+    }}>
+      {steps.map((s, i) => {
+        const done   = step > i + 1;
+        const active = step === i + 1;
+        return (
+          <div key={i} style={{ display: 'flex', alignItems: 'center', flex: i < steps.length - 1 ? 1 : 'none' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 800, fontSize: done ? 16 : 14,
+                background: done   ? '#dcfce7'
+                          : active ? 'linear-gradient(135deg, #1e3a5f, #2563eb)'
+                          : '#f1f5f9',
+                color:   done   ? '#16a34a'
+                       : active ? '#fff'
+                       : '#94a3b8',
+                boxShadow: active ? '0 4px 12px rgba(37,99,235,.3)' : 'none',
+              }}>
+                {done ? '✓' : active ? s.icon : i + 1}
+              </div>
+              <span style={{
+                fontSize: 13, fontWeight: active ? 700 : 500,
+                color: active ? 'var(--navy)' : done ? '#16a34a' : '#94a3b8',
+                whiteSpace: 'nowrap',
+              }}>
+                {s.label}
+              </span>
+            </div>
+            {i < steps.length - 1 && (
+              <div style={{
+                flex: 1, height: 2, margin: '0 12px',
+                background: done ? '#bbf7d0' : '#e2e8f0',
+                borderRadius: 2,
+              }} />
+            )}
           </div>
-          {i < steps.length - 1 && <div className="step-divider" />}
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
 
-export default function NewRequestPage({ user }) {
-  const navigate              = useNavigate();
-  const [searchParams]        = useSearchParams();
-  const rtiParam              = searchParams.get('rti') || '';
+/* ── Section heading used inside cards ── */
+function SectionHeading({ children }) {
+  return (
+    <div style={{
+      fontSize: 12, fontWeight: 700, color: 'var(--navy)',
+      textTransform: 'uppercase', letterSpacing: '0.08em',
+      marginTop: 20, marginBottom: 12,
+      paddingBottom: 8, borderBottom: '2px solid #e0e7ff',
+      display: 'flex', alignItems: 'center', gap: 6,
+    }}>
+      {children}
+    </div>
+  );
+}
 
-  const [step, setStep]       = useState(1);
-  const [rtis, setRtis]       = useState([]);
-  const [error, setError]     = useState('');
+/* ── Read-only info display ── */
+function ReadonlyField({ value, muted, hint }) {
+  return (
+    <>
+      <div style={{
+        padding: '8px 12px', background: '#f8fafc',
+        border: '1px solid var(--border)', borderRadius: 10,
+        fontSize: 13, color: muted ? 'var(--muted)' : 'var(--text)',
+        minHeight: 38, display: 'flex', alignItems: 'center',
+      }}>
+        {value || <span style={{ color: 'var(--muted)' }}>—</span>}
+      </div>
+      {hint && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>{hint}</div>}
+    </>
+  );
+}
+
+export default function NewRequestPage({ user }) {
+  const navigate           = useNavigate();
+  const [searchParams]     = useSearchParams();
+  const rtiParam           = searchParams.get('rti') || '';
+
+  const [step, setStep]    = useState(1);
+  const [rtis, setRtis]    = useState([]);
+  const [error, setError]  = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [successId, setSuccessId]   = useState(null);
 
@@ -131,7 +202,6 @@ export default function NewRequestPage({ user }) {
       .catch(() => setProfileReady(true));
   }, []);
 
-  /* Apply a profile choice to a passenger slot */
   const applyProfileChoice = (idx, key) => {
     if (!key) return;
     const choice = profileChoices.find(c => c.key === key);
@@ -145,7 +215,7 @@ export default function NewRequestPage({ user }) {
       _isVisitor:    false,
       name:          choice.name,
       category:      choice.category,
-      gender:        choice.gender,          // auto-fill, no manual editing
+      gender:        choice.gender,
       uid:           choice.uid,
       sponsor_uid:   choice.category === 'DPN' ? myEmployeeId : '',
       _nik:          choice.nik,
@@ -157,7 +227,6 @@ export default function NewRequestPage({ user }) {
     }));
   };
 
-  /* When user switches NIK ↔ Passport, swap the auto-filled id_number */
   const handleIdTypeChange = (idx, newType) => {
     setPassengers(ps => ps.map((p, i) => {
       if (i !== idx) return p;
@@ -168,7 +237,6 @@ export default function NewRequestPage({ user }) {
 
   const resolveAirport = (val, other) => val === 'Other' ? other : val;
 
-  /* ── Validation ── */
   const validateStep1 = () => {
     if (reqType === 'RTI' && !rtiId) return 'Please select an RTI event.';
     if (!outFrom || !outTo)          return 'Please fill in outbound airports.';
@@ -199,8 +267,8 @@ export default function NewRequestPage({ user }) {
         if (p.category === 'DPN' && !p.uid.trim())         return `${n}: Dependent ID is required.`;
         if (p.category === 'DPN' && !p.sponsor_uid.trim()) return `${n}: Sponsor UID is required.`;
       }
-      if (!p.email.trim())  return `${n}: Contact email is required.`;
-      if (!p.phone.trim())  return `${n}: Phone / mobile number is required.`;
+      if (!p.email.trim()) return `${n}: Contact email is required.`;
+      if (!p.phone.trim()) return `${n}: Phone / mobile number is required.`;
     }
     return '';
   };
@@ -208,15 +276,13 @@ export default function NewRequestPage({ user }) {
   const handleNextStep1 = () => {
     const err = validateStep1();
     if (err) { setError(err); return; }
-    setError('');
-    setStep(2);
+    setError(''); setStep(2);
   };
 
   const handleNextStep2 = () => {
     const err = validateStep2();
     if (err) { setError(err); return; }
-    setError('');
-    setStep(3);
+    setError(''); setStep(3);
   };
 
   const handleSubmit = async () => {
@@ -238,7 +304,7 @@ export default function NewRequestPage({ user }) {
         inbound_to:      hasReturn ? resolveAirport(inTo, inToOther) : null,
         inbound_date:    hasReturn ? inDate : null,
         notes,
-        passengers:      passengers.map(p => ({
+        passengers: passengers.map(p => ({
           name:        p.name.trim(),
           category:    p._isVisitor ? 'VST' : p.category,
           uid:         p.uid.trim()  || null,
@@ -260,68 +326,131 @@ export default function NewRequestPage({ user }) {
     }
   };
 
-  /* Passenger helpers */
-  const updatePassenger = (idx, field, value) => {
+  const updatePassenger = (idx, field, value) =>
     setPassengers(ps => ps.map((p, i) => i === idx ? { ...p, [field]: value } : p));
-  };
 
   const addPassenger    = () => setPassengers(ps => [...ps, emptyPassenger()]);
   const removePassenger = (idx) => setPassengers(ps => ps.filter((_, i) => i !== idx));
+
+  /* ── Input/select style helpers ── */
+  const inputSx  = { borderRadius: 10 };
+  const selectSx = { borderRadius: 10 };
 
   /* ── Success Screen ── */
   if (successId) {
     return (
       <div>
-        <div className="page-header">
-          <div className="page-title">Request Submitted</div>
+        {/* Page Header */}
+        <div style={{
+          background: 'linear-gradient(135deg, #15803d 0%, #16a34a 100%)',
+          borderRadius: 20, padding: '24px 28px', marginBottom: 24,
+          boxShadow: '0 4px 20px rgba(21,128,61,.25)',
+          position: 'relative', overflow: 'hidden',
+        }}>
+          <div style={{ position: 'absolute', right: -30, top: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.07)' }} />
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', position: 'relative' }}>Request Submitted</div>
         </div>
-        <div className="card" style={{ textAlign: 'center', padding: 40 }}>
-          <div style={{ fontSize: 48, marginBottom: 12 }}>✅</div>
-          <div style={{ fontSize: 18, fontWeight: 800, color: 'var(--navy)', marginBottom: 8 }}>
+
+        <div style={{
+          background: '#fff', borderRadius: 20, padding: '56px 40px', textAlign: 'center',
+          boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 24px rgba(0,0,0,.06)',
+        }}>
+          <div style={{
+            width: 80, height: 80, borderRadius: '50%',
+            background: 'linear-gradient(135deg, #15803d, #16a34a)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 36, margin: '0 auto 20px',
+            boxShadow: '0 8px 24px rgba(22,163,74,.35)',
+          }}>✅</div>
+          <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--navy)', marginBottom: 8 }}>
             Your request has been submitted!
           </div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 24 }}>
-            Request ID: <strong>{successId}</strong><br />
-            PIC Travel will review and process your request.
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 8 }}>
+            Request ID: <strong style={{ color: 'var(--navy)' }}>#{successId}</strong>
           </div>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <button className="btn btn-secondary" onClick={() => navigate('/my-requests')}>View My Requests</button>
-            <button className="btn btn-primary"   onClick={() => { setStep(1); setSuccessId(null); setPassengers([emptyPassenger()]); }}>Submit Another</button>
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 32 }}>
+            PIC Travel will review and process your request. You will be notified of status updates.
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button
+              style={{
+                padding: '11px 24px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: '#f1f5f9', color: 'var(--navy)', border: 'none', cursor: 'pointer',
+              }}
+              onClick={() => navigate('/my-requests')}
+            >
+              View My Requests
+            </button>
+            <button
+              style={{
+                padding: '11px 24px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', color: '#fff',
+                border: 'none', cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(37,99,235,.35)',
+              }}
+              onClick={() => { setStep(1); setSuccessId(null); setPassengers([emptyPassenger()]); }}
+            >
+              + Submit Another
+            </button>
           </div>
         </div>
       </div>
     );
   }
 
+  /* ── Error box ── */
+  const ErrorBox = ({ msg }) => msg ? (
+    <div style={{
+      background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 12,
+      padding: '12px 16px', marginBottom: 16, fontSize: 13, color: '#dc2626',
+      display: 'flex', alignItems: 'flex-start', gap: 8,
+    }}>
+      <span>⚠️</span> {msg}
+    </div>
+  ) : null;
+
   return (
     <div>
-      <div className="page-header">
-        <div>
-          <div className="page-title">New Travel Request</div>
-          <div className="page-subtitle">Fill in the details for your trip</div>
+      {/* Page Header */}
+      <div style={{
+        background: 'linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%)',
+        borderRadius: 20, padding: '24px 28px', marginBottom: 24,
+        boxShadow: '0 4px 20px rgba(30,58,95,.2)',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        flexWrap: 'wrap', gap: 12, position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{ position: 'absolute', right: -30, top: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
+        <div style={{ position: 'relative' }}>
+          <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+            ✈️ Travel Request
+          </div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>New Travel Request</div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>Fill in the details for your trip</div>
         </div>
       </div>
 
       <StepIndicator step={step} />
-      {error && <div className="error-box">{error}</div>}
+      <ErrorBox msg={error} />
 
-      {/* ── Step 1: Trip Details ── */}
+      {/* ═══════════════ STEP 1: Trip Details ═══════════════ */}
       {step === 1 && (
-        <div className="card">
-          <div className="card-title">Trip Details</div>
-
+        <div style={{
+          background: '#fff', borderRadius: 16, padding: '24px',
+          boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+        }}>
+          <SectionHeading>🗂️ Request Info</SectionHeading>
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Request Type</label>
-              <select className="form-select" value={reqType} onChange={e => setReqType(e.target.value)}>
+              <select className="form-select" style={selectSx} value={reqType} onChange={e => setReqType(e.target.value)}>
                 <option value="Regular">Regular</option>
-                <option value="RTI">RTI</option>
+                <option value="RTI">RTI — Registered Travel</option>
               </select>
             </div>
             {reqType === 'RTI' && (
               <div className="form-group">
                 <label className="form-label">RTI Event</label>
-                <select className="form-select" value={rtiId} onChange={e => setRtiId(e.target.value)}>
+                <select className="form-select" style={selectSx} value={rtiId} onChange={e => setRtiId(e.target.value)}>
                   <option value="">— Select RTI Event —</option>
                   {rtis.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
@@ -332,62 +461,68 @@ export default function NewRequestPage({ user }) {
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Transport Type</label>
-              <select className="form-select" value={transport} onChange={e => setTransport(e.target.value)}>
+              <select className="form-select" style={selectSx} value={transport} onChange={e => setTransport(e.target.value)}>
                 <option value="Plane">✈️ Plane</option>
                 <option value="Bus">🚌 Bus</option>
-                <option value="Both">Both</option>
+                <option value="Both">✈️🚌 Both</option>
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Travel Purpose</label>
-              <select className="form-select" value={purpose} onChange={e => setPurpose(e.target.value)}>
+              <select className="form-select" style={selectSx} value={purpose} onChange={e => setPurpose(e.target.value)}>
                 {PURPOSE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.value} — {o.label}</option>)}
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">Payment Method</label>
-              <select className="form-select" value={payment} onChange={e => setPayment(e.target.value)}>
+              <select className="form-select" style={selectSx} value={payment} onChange={e => setPayment(e.target.value)}>
                 {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
           </div>
 
-          {/* Outbound */}
-          <div className="section-title">Outbound Trip</div>
+          <SectionHeading>🛫 Outbound Trip</SectionHeading>
           <div className="form-row">
             <div className="form-group">
               <label className="form-label">Type</label>
-              <select className="form-select" value={outType} onChange={e => setOutType(e.target.value)}>
+              <select className="form-select" style={selectSx} value={outType} onChange={e => setOutType(e.target.value)}>
                 <option value="DOM">Domestic (DOM)</option>
                 <option value="INT">International (INT)</option>
               </select>
             </div>
             <div className="form-group">
               <label className="form-label">From Airport</label>
-              <select className="form-select" value={outFrom} onChange={e => setOutFrom(e.target.value)}>
+              <select className="form-select" style={selectSx} value={outFrom} onChange={e => setOutFrom(e.target.value)}>
                 {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               {outFrom === 'Other' && (
-                <input className="form-input" style={{ marginTop: 6 }} placeholder="Airport code / name" value={outFromOther} onChange={e => setOutFromOther(e.target.value)} />
+                <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={outFromOther} onChange={e => setOutFromOther(e.target.value)} />
               )}
             </div>
             <div className="form-group">
               <label className="form-label">To Airport</label>
-              <select className="form-select" value={outTo} onChange={e => setOutTo(e.target.value)}>
+              <select className="form-select" style={selectSx} value={outTo} onChange={e => setOutTo(e.target.value)}>
                 {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
               </select>
               {outTo === 'Other' && (
-                <input className="form-input" style={{ marginTop: 6 }} placeholder="Airport code / name" value={outToOther} onChange={e => setOutToOther(e.target.value)} />
+                <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={outToOther} onChange={e => setOutToOther(e.target.value)} />
               )}
             </div>
             <div className="form-group">
               <label className="form-label">Departure Date</label>
-              <input className="form-input" type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
+              <input className="form-input" style={inputSx} type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
             </div>
           </div>
 
           {/* Return toggle */}
-          <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, cursor: 'pointer',
+            padding: '9px 16px', borderRadius: 10, userSelect: 'none', marginBottom: 4,
+            background: hasReturn ? '#dbeafe' : '#f8fafc',
+            border: `1.5px solid ${hasReturn ? '#93c5fd' : 'var(--border)'}`,
+            fontSize: 13, fontWeight: 600,
+            color: hasReturn ? '#1d4ed8' : 'var(--muted)',
+          }}>
             <input
               type="checkbox"
               id="hasReturn"
@@ -395,85 +530,119 @@ export default function NewRequestPage({ user }) {
               onChange={e => setHasReturn(e.target.checked)}
               style={{ width: 16, height: 16 }}
             />
-            <label htmlFor="hasReturn" style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', cursor: 'pointer' }}>
-              Add Return Trip
-            </label>
-          </div>
+            🔄 Add Return Trip
+          </label>
 
-          {/* Inbound */}
           {hasReturn && (
             <>
-              <div className="section-title">Return Trip</div>
+              <SectionHeading>🛬 Return Trip</SectionHeading>
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Type</label>
-                  <select className="form-select" value={inType} onChange={e => setInType(e.target.value)}>
+                  <select className="form-select" style={selectSx} value={inType} onChange={e => setInType(e.target.value)}>
                     <option value="DOM">Domestic (DOM)</option>
                     <option value="INT">International (INT)</option>
                   </select>
                 </div>
                 <div className="form-group">
                   <label className="form-label">From Airport</label>
-                  <select className="form-select" value={inFrom} onChange={e => setInFrom(e.target.value)}>
+                  <select className="form-select" style={selectSx} value={inFrom} onChange={e => setInFrom(e.target.value)}>
                     {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                   {inFrom === 'Other' && (
-                    <input className="form-input" style={{ marginTop: 6 }} placeholder="Airport code / name" value={inFromOther} onChange={e => setInFromOther(e.target.value)} />
+                    <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={inFromOther} onChange={e => setInFromOther(e.target.value)} />
                   )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">To Airport</label>
-                  <select className="form-select" value={inTo} onChange={e => setInTo(e.target.value)}>
+                  <select className="form-select" style={selectSx} value={inTo} onChange={e => setInTo(e.target.value)}>
                     {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                   </select>
                   {inTo === 'Other' && (
-                    <input className="form-input" style={{ marginTop: 6 }} placeholder="Airport code / name" value={inToOther} onChange={e => setInToOther(e.target.value)} />
+                    <input className="form-input" style={{ ...inputSx, marginTop: 6 }} placeholder="Airport code / name" value={inToOther} onChange={e => setInToOther(e.target.value)} />
                   )}
                 </div>
                 <div className="form-group">
                   <label className="form-label">Return Date</label>
-                  <input className="form-input" type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
+                  <input className="form-input" style={inputSx} type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
                 </div>
               </div>
             </>
           )}
 
+          <SectionHeading>📝 Additional Info</SectionHeading>
           <div className="form-group">
             <label className="form-label">Notes</label>
-            <textarea className="form-textarea" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any special requests or information…" />
+            <textarea className="form-textarea" style={{ borderRadius: 10 }} value={notes} onChange={e => setNotes(e.target.value)} placeholder="Any special requests or additional information…" />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-            <button className="btn btn-primary" onClick={handleNextStep1}>Next: Passengers →</button>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <button
+              style={{
+                padding: '11px 28px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', color: '#fff',
+                border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(37,99,235,.3)',
+              }}
+              onClick={handleNextStep1}
+            >
+              Next: Passengers →
+            </button>
           </div>
         </div>
       )}
 
-      {/* ── Step 2: Passengers ── */}
+      {/* ═══════════════ STEP 2: Passengers ═══════════════ */}
       {step === 2 && (
-        <div className="card">
-          <div className="card-title">Passengers</div>
-
+        <div>
           {!profileReady && (
-            <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>Loading profile…</div>
+            <div style={{
+              background: '#fff', borderRadius: 14, padding: '14px 20px', marginBottom: 16,
+              fontSize: 13, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 1px 3px rgba(0,0,0,.06)',
+            }}>
+              <span>⏳</span> Loading your profile…
+            </div>
           )}
 
           {passengers.map((p, idx) => (
-            <div key={idx} className="passenger-card">
-
-              {/* ── Header + Visitor toggle ── */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 13 }}>Passenger {idx + 1}</div>
+            <div key={idx} style={{
+              background: '#fff', borderRadius: 16, padding: '20px 24px', marginBottom: 16,
+              boxShadow: p._isVisitor
+                ? '0 0 0 2px #f59e0b, 0 4px 16px rgba(245,158,11,.08)'
+                : '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+            }}>
+              {/* Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#fff', fontWeight: 800, fontSize: 13, flexShrink: 0,
+                  }}>{idx + 1}</div>
+                  <div style={{ fontWeight: 700, color: 'var(--navy)', fontSize: 14 }}>
+                    Passenger {idx + 1}
+                    {p.name && <span style={{ fontWeight: 400, color: 'var(--muted)', fontSize: 13 }}> — {p.name}</span>}
+                  </div>
+                </div>
                 {passengers.length > 1 && (
-                  <button className="btn btn-danger btn-sm" onClick={() => removePassenger(idx)}>Remove</button>
+                  <button
+                    style={{
+                      padding: '5px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600,
+                      background: '#fee2e2', color: '#dc2626', border: 'none', cursor: 'pointer',
+                    }}
+                    onClick={() => removePassenger(idx)}
+                  >
+                    Remove
+                  </button>
                 )}
               </div>
 
-              {/* Visitor radio */}
+              {/* Visitor toggle */}
               <label style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 14,
-                padding: '7px 14px', borderRadius: 20, cursor: 'pointer', userSelect: 'none',
-                background: p._isVisitor ? '#fef3c7' : '#f1f5f9',
+                display: 'inline-flex', alignItems: 'center', gap: 8, marginBottom: 18,
+                padding: '8px 16px', borderRadius: 10, cursor: 'pointer', userSelect: 'none',
+                background: p._isVisitor ? '#fef3c7' : '#f8fafc',
                 border: `1.5px solid ${p._isVisitor ? '#f59e0b' : 'var(--border)'}`,
                 fontSize: 13, fontWeight: 600,
                 color: p._isVisitor ? '#92400e' : 'var(--muted)',
@@ -495,28 +664,30 @@ export default function NewRequestPage({ user }) {
                 🙋 This passenger is a VISITOR
               </label>
 
-              {/* ══ VISITOR form ══ */}
+              {/* ── VISITOR form ── */}
               {p._isVisitor && (
                 <>
-                  {/* Name — manual */}
-                  <div className="form-group" style={{ marginBottom: 10 }}>
-                    <label className="form-label">Full Name <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <input className="form-input" value={p.name}
+                  <div className="form-group" style={{ marginBottom: 12 }}>
+                    <label className="form-label">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input className="form-input" style={inputSx} value={p.name}
                       onChange={e => updatePassenger(idx, 'name', e.target.value)}
                       placeholder="Visitor's full name as on ID" />
                   </div>
 
-                  {/* Category auto + Gender manual */}
-                  <div className="form-row" style={{ marginBottom: 10 }}>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
                     <div className="form-group">
                       <label className="form-label">Category</label>
-                      <div style={{ padding: '7px 10px', background: '#fef3c7', border: '1px solid #f59e0b', borderRadius: 6, fontSize: 13, fontWeight: 600, color: '#92400e' }}>
+                      <div style={{
+                        padding: '8px 12px', background: '#fef3c7',
+                        border: '1px solid #f59e0b', borderRadius: 10,
+                        fontSize: 13, fontWeight: 700, color: '#92400e',
+                      }}>
                         🙋 VST — Visitor
                       </div>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Gender <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select className="form-select" value={p.gender} onChange={e => updatePassenger(idx, 'gender', e.target.value)}>
+                      <label className="form-label">Gender <span style={{ color: '#ef4444' }}>*</span></label>
+                      <select className="form-select" style={selectSx} value={p.gender} onChange={e => updatePassenger(idx, 'gender', e.target.value)}>
                         <option value="">— Select —</option>
                         <option value="MALE">Male</option>
                         <option value="FEMALE">Female</option>
@@ -524,34 +695,30 @@ export default function NewRequestPage({ user }) {
                     </div>
                   </div>
 
-                  {/* Visitor ID + Sponsor UID */}
-                  <div className="form-row" style={{ marginBottom: 10 }}>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
                     <div className="form-group">
                       <label className="form-label">Visitor ID</label>
-                      <input className="form-input" value={p.uid}
+                      <input className="form-input" style={inputSx} value={p.uid}
                         onChange={e => updatePassenger(idx, 'uid', e.target.value)}
                         placeholder="Visitor ID / Badge number" />
                     </div>
                     <div className="form-group">
-                      <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input className="form-input" value={myEmployeeId} readOnly
-                        style={{ background: '#f1f5f9', color: 'var(--muted)' }} />
-                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Auto-filled from your profile</div>
+                      <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: '#ef4444' }}>*</span></label>
+                      <ReadonlyField value={myEmployeeId} muted hint="Auto-filled from your profile" />
                     </div>
                   </div>
 
-                  {/* Other ID Type + Number — manual */}
-                  <div className="form-row" style={{ marginBottom: 10 }}>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
                     <div className="form-group">
-                      <label className="form-label">Other ID Type <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select className="form-select" value={p.other_id_type} onChange={e => updatePassenger(idx, 'other_id_type', e.target.value)}>
+                      <label className="form-label">Other ID Type <span style={{ color: '#ef4444' }}>*</span></label>
+                      <select className="form-select" style={selectSx} value={p.other_id_type} onChange={e => updatePassenger(idx, 'other_id_type', e.target.value)}>
                         <option value="NIK">NIK</option>
                         <option value="Passport">Passport</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">ID Number <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input className="form-input" value={p.id_number}
+                      <label className="form-label">ID Number <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input className="form-input" style={inputSx} value={p.id_number}
                         onChange={e => updatePassenger(idx, 'id_number', e.target.value)}
                         placeholder={p.other_id_type === 'NIK' ? '16-digit NIK number' : 'Passport number'} />
                     </div>
@@ -559,42 +726,48 @@ export default function NewRequestPage({ user }) {
                 </>
               )}
 
-              {/* ══ NORMAL (profile) form ══ */}
+              {/* ── NORMAL (profile) form ── */}
               {!p._isVisitor && (
                 <>
-                  {/* Full Name — profile dropdown */}
-                  <div className="form-group" style={{ marginBottom: 10 }}>
-                    <label className="form-label">Full Name <span style={{ color: 'var(--danger)' }}>*</span></label>
-                    <select className="form-select" value={p._profileKey} onChange={e => applyProfileChoice(idx, e.target.value)}>
-                      <option value="">— Select person —</option>
+                  <div className="form-group" style={{ marginBottom: 12 }}>
+                    <label className="form-label">Full Name <span style={{ color: '#ef4444' }}>*</span></label>
+                    <select className="form-select" style={selectSx} value={p._profileKey} onChange={e => applyProfileChoice(idx, e.target.value)}>
+                      <option value="">— Select person from profile —</option>
                       {profileChoices.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                     </select>
                     {p._profileKey && (
-                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)', padding: '6px 10px', background: '#f0f9ff', border: '1px solid #bae6fd', borderRadius: 6, marginTop: 6 }}>
+                      <div style={{
+                        fontSize: 13, fontWeight: 600, color: 'var(--navy)',
+                        padding: '7px 12px', background: '#f0f9ff',
+                        border: '1px solid #bae6fd', borderRadius: 10, marginTop: 6,
+                      }}>
                         {p.name}
                       </div>
                     )}
                   </div>
 
-                  {/* Category auto + Gender auto */}
-                  <div className="form-row" style={{ marginBottom: 10 }}>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
                     <div className="form-group">
                       <label className="form-label">Category</label>
-                      <div style={{ padding: '7px 10px', background: '#f1f5f9', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text)', minHeight: 36 }}>
+                      <div style={{
+                        padding: '8px 12px', background: '#f8fafc',
+                        border: '1px solid var(--border)', borderRadius: 10,
+                        fontSize: 13, minHeight: 38, display: 'flex', alignItems: 'center',
+                      }}>
                         {p._profileKey
-                          ? (p.category === 'EMP' ? '🧑‍💼 EMP — Employee' : '👨‍👩‍👧 DPN — Dependent')
+                          ? (p.category === 'EMP'
+                              ? <span style={{ fontWeight: 700, color: '#1d4ed8' }}>🧑‍💼 EMP — Employee</span>
+                              : <span style={{ fontWeight: 700, color: '#b45309' }}>👨‍👩‍👧 DPN — Dependent</span>)
                           : <span style={{ color: 'var(--muted)' }}>Auto-filled</span>}
                       </div>
                     </div>
                     <div className="form-group">
                       <label className="form-label">Gender</label>
                       {p.gender ? (
-                        <div style={{ padding: '7px 10px', background: '#f1f5f9', borderRadius: 6, border: '1px solid var(--border)', fontSize: 13, color: 'var(--text)' }}>
-                          {genderLabel(p.gender)}
-                        </div>
+                        <ReadonlyField value={genderLabel(p.gender)} />
                       ) : (
                         <>
-                          <select className="form-select" value={p.gender} onChange={e => updatePassenger(idx, 'gender', e.target.value)}>
+                          <select className="form-select" style={selectSx} value={p.gender} onChange={e => updatePassenger(idx, 'gender', e.target.value)}>
                             <option value="">— Select —</option>
                             <option value="MALE">Male</option>
                             <option value="FEMALE">Female</option>
@@ -607,56 +780,49 @@ export default function NewRequestPage({ user }) {
 
                   {/* Employee ID — EMP only */}
                   {p.category === 'EMP' && p._profileKey && (
-                    <div className="form-group" style={{ marginBottom: 10 }}>
+                    <div className="form-group" style={{ marginBottom: 12 }}>
                       <label className="form-label">Employee ID</label>
-                      <input className="form-input" value={p.uid} readOnly
-                        style={{ background: '#f1f5f9', color: 'var(--muted)' }} />
-                      {!p.uid && (
-                        <div style={{ fontSize: 11, color: '#d97706', marginTop: 3 }}>⚠️ Employee ID not set in profile — please update your profile</div>
-                      )}
+                      <ReadonlyField value={p.uid} muted hint={!p.uid ? '⚠️ Employee ID not set in profile — please update your profile' : ''} />
                     </div>
                   )}
 
                   {/* Dependent ID + Sponsor UID — DPN only */}
                   {p.category === 'DPN' && p._profileKey && (
-                    <div className="form-row" style={{ marginBottom: 10 }}>
+                    <div className="form-row" style={{ marginBottom: 12 }}>
                       <div className="form-group">
-                        <label className="form-label">Dependent ID <span style={{ color: 'var(--danger)' }}>*</span></label>
-                        <input className="form-input" value={p.uid}
+                        <label className="form-label">Dependent ID <span style={{ color: '#ef4444' }}>*</span></label>
+                        <input className="form-input" style={inputSx} value={p.uid}
                           onChange={e => updatePassenger(idx, 'uid', e.target.value)}
-                          placeholder="0000910439-01"
-                          style={p.uid ? { background: '#f1f5f9', color: 'var(--muted)' } : {}} />
+                          placeholder="0000910439-01" />
                         <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Format: employee ID + sequence (e.g. -01)</div>
                       </div>
                       <div className="form-group">
-                        <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: 'var(--danger)' }}>*</span></label>
-                        <input className="form-input" value={myEmployeeId} readOnly
-                          style={{ background: '#f1f5f9', color: 'var(--muted)' }} />
-                        <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 3 }}>Auto-filled from your profile</div>
+                        <label className="form-label">Sponsor UID (Employee ID) <span style={{ color: '#ef4444' }}>*</span></label>
+                        <ReadonlyField value={myEmployeeId} muted hint="Auto-filled from your profile" />
                       </div>
                     </div>
                   )}
 
                   {/* Date of Birth — children (Master / Miss) only */}
                   {isChild(p) && (
-                    <div className="form-group" style={{ marginBottom: 10 }}>
-                      <label className="form-label">Date of Birth <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input className="form-input" type="date" value={p.dob} onChange={e => updatePassenger(idx, 'dob', e.target.value)} />
+                    <div className="form-group" style={{ marginBottom: 12 }}>
+                      <label className="form-label">Date of Birth <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input className="form-input" style={inputSx} type="date" value={p.dob} onChange={e => updatePassenger(idx, 'dob', e.target.value)} />
                     </div>
                   )}
 
                   {/* Other ID Type + ID Number */}
-                  <div className="form-row" style={{ marginBottom: 10 }}>
+                  <div className="form-row" style={{ marginBottom: 12 }}>
                     <div className="form-group">
-                      <label className="form-label">Other ID Type <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <select className="form-select" value={p.other_id_type} onChange={e => handleIdTypeChange(idx, e.target.value)}>
+                      <label className="form-label">Other ID Type <span style={{ color: '#ef4444' }}>*</span></label>
+                      <select className="form-select" style={selectSx} value={p.other_id_type} onChange={e => handleIdTypeChange(idx, e.target.value)}>
                         <option value="NIK">NIK</option>
                         <option value="Passport">Passport</option>
                       </select>
                     </div>
                     <div className="form-group">
-                      <label className="form-label">ID Number <span style={{ color: 'var(--danger)' }}>*</span></label>
-                      <input className="form-input" value={p.id_number}
+                      <label className="form-label">ID Number <span style={{ color: '#ef4444' }}>*</span></label>
+                      <input className="form-input" style={inputSx} value={p.id_number}
                         onChange={e => updatePassenger(idx, 'id_number', e.target.value)}
                         placeholder={p.other_id_type === 'NIK' ? '16-digit NIK number' : 'Passport number'} />
                       {p._profileKey && !p.id_number && (
@@ -669,89 +835,169 @@ export default function NewRequestPage({ user }) {
                 </>
               )}
 
-              {/* Contact Email + Phone — always manual, always mandatory */}
-              <div className="form-row">
-                <div className="form-group">
-                  <label className="form-label">Contact Email <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <input className="form-input" type="email" value={p.email}
-                    onChange={e => updatePassenger(idx, 'email', e.target.value)}
-                    placeholder="Preferred to personal email (active)" />
+              {/* Contact — always shown */}
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, marginTop: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
+                  📞 Contact Details
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Phone / Mobile <span style={{ color: 'var(--danger)' }}>*</span></label>
-                  <input className="form-input" value={p.phone}
-                    onChange={e => updatePassenger(idx, 'phone', e.target.value)}
-                    placeholder="The active number" />
+                <div className="form-row">
+                  <div className="form-group">
+                    <label className="form-label">Contact Email <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input className="form-input" style={inputSx} type="email" value={p.email}
+                      onChange={e => updatePassenger(idx, 'email', e.target.value)}
+                      placeholder="Preferred to personal email (active)" />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Phone / Mobile <span style={{ color: '#ef4444' }}>*</span></label>
+                    <input className="form-input" style={inputSx} value={p.phone}
+                      onChange={e => updatePassenger(idx, 'phone', e.target.value)}
+                      placeholder="The active number" />
+                  </div>
                 </div>
               </div>
             </div>
           ))}
 
-          <button className="btn btn-secondary" onClick={addPassenger} style={{ marginBottom: 20 }}>
+          <button
+            style={{
+              padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 700,
+              background: '#f0f4ff', color: '#2563eb',
+              border: '1.5px dashed #93c5fd', cursor: 'pointer', marginBottom: 20,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+            onClick={addPassenger}
+          >
             + Add Passenger
           </button>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <button className="btn btn-secondary" onClick={() => { setStep(1); setError(''); }}>← Back</button>
-            <button className="btn btn-primary"   onClick={handleNextStep2}>Next: Review →</button>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            paddingTop: 16, borderTop: '1px solid var(--border)',
+          }}>
+            <button
+              style={{
+                padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+                background: '#f1f5f9', color: 'var(--navy)', border: 'none', cursor: 'pointer',
+              }}
+              onClick={() => { setStep(1); setError(''); }}
+            >
+              ← Back
+            </button>
+            <button
+              style={{
+                padding: '11px 28px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: 'linear-gradient(135deg, #1e3a5f, #2563eb)', color: '#fff',
+                border: 'none', cursor: 'pointer', boxShadow: '0 4px 14px rgba(37,99,235,.3)',
+              }}
+              onClick={handleNextStep2}
+            >
+              Next: Review →
+            </button>
           </div>
         </div>
       )}
 
-      {/* ── Step 3: Review ── */}
+      {/* ═══════════════ STEP 3: Review & Submit ═══════════════ */}
       {step === 3 && (
-        <div className="card">
-          <div className="card-title">Review & Submit</div>
-
-          <div className="section-title">Trip Summary</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px,1fr))', gap: 12, marginBottom: 20 }}>
+        <div style={{
+          background: '#fff', borderRadius: 16, padding: '24px',
+          boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+        }}>
+          <SectionHeading>🗂️ Trip Summary</SectionHeading>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px,1fr))', gap: 10, marginBottom: 20 }}>
             {[
-              ['Type',      reqType + (rtiId ? ` — ${rtis.find(r=>r.id==rtiId)?.name||rtiId}` : '')],
-              ['Transport', transport],
-              ['Purpose',   purpose],
-              ['Payment',   payment],
-              ['Outbound',  `${resolveAirport(outFrom,outFromOther)} → ${resolveAirport(outTo,outToOther)}`],
-              ['Depart',    outDate],
+              ['Request Type', reqType + (rtiId ? ` — ${rtis.find(r=>r.id==rtiId)?.name||rtiId}` : '')],
+              ['Transport',    transport],
+              ['Purpose',      purpose],
+              ['Payment',      payment],
+              ['Outbound',     `${resolveAirport(outFrom,outFromOther)} → ${resolveAirport(outTo,outToOther)}`],
+              ['Depart Date',  outDate],
               ...(hasReturn ? [
-                ['Return',  `${resolveAirport(inFrom,inFromOther)} → ${resolveAirport(inTo,inToOther)}`],
-                ['Return Date', inDate],
+                ['Return',       `${resolveAirport(inFrom,inFromOther)} → ${resolveAirport(inTo,inToOther)}`],
+                ['Return Date',  inDate],
               ] : []),
             ].map(([k, v]) => (
-              <div key={k} style={{ background: '#f8fafc', borderRadius: 8, padding: '10px 12px' }}>
-                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 3 }}>{k}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--navy)' }}>{v || '—'}</div>
+              <div key={k} style={{
+                background: '#f8fafc', borderRadius: 10, padding: '10px 14px',
+                border: '1px solid var(--border)',
+              }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>{k}</div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--navy)' }}>{v || '—'}</div>
               </div>
             ))}
           </div>
-          {notes && <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20 }}>Notes: {notes}</div>}
+          {notes && (
+            <div style={{
+              background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 10,
+              padding: '10px 14px', marginBottom: 20, fontSize: 13, color: '#78350f',
+            }}>
+              <strong>Notes:</strong> {notes}
+            </div>
+          )}
 
-          <div className="section-title">Passengers ({passengers.length})</div>
-          <table className="table" style={{ marginBottom: 24 }}>
-            <thead>
-              <tr>
-                <th>#</th><th>Name</th><th>Cat</th><th>UID</th><th>Gender</th><th>DOB</th><th>ID Type</th><th>ID No.</th>
-              </tr>
-            </thead>
-            <tbody>
-              {passengers.map((p, i) => (
-                <tr key={i}>
-                  <td>{i+1}</td>
-                  <td>{p.name}</td>
-                  <td>{p.category}</td>
-                  <td>{p.uid || '—'}{p.category === 'DPN' && p.sponsor_uid ? ` (→${p.sponsor_uid})` : ''}</td>
-                  <td>{p.gender === 'MALE' ? 'Male' : p.gender === 'FEMALE' ? 'Female' : '—'}</td>
-                  <td>{p.dob || '—'}</td>
-                  <td>{p.other_id_type}</td>
-                  <td>{p.id_number || '—'}</td>
+          <SectionHeading>👤 Passengers ({passengers.length})</SectionHeading>
+          <div style={{ overflowX: 'auto', marginBottom: 24 }}>
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>#</th><th>Name</th><th>Cat</th><th>UID</th><th>Gender</th><th>DOB</th><th>ID Type</th><th>ID Number</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {passengers.map((p, i) => (
+                  <tr key={i}>
+                    <td style={{ color: 'var(--muted)', fontWeight: 600 }}>{i + 1}</td>
+                    <td style={{ fontWeight: 600 }}>{p.name}</td>
+                    <td>
+                      <span style={{
+                        padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                        background: p.category === 'EMP' ? '#dbeafe' : p.category === 'DPN' ? '#fef3c7' : '#f3e8ff',
+                        color: p.category === 'EMP' ? '#1d4ed8' : p.category === 'DPN' ? '#b45309' : '#7c3aed',
+                      }}>{p.category}</span>
+                    </td>
+                    <td style={{ fontSize: 12 }}>
+                      {p.uid || '—'}
+                      {p.category === 'DPN' && p.sponsor_uid ? <span style={{ color: 'var(--muted)' }}> →{p.sponsor_uid}</span> : ''}
+                    </td>
+                    <td>{p.gender === 'MALE' ? 'Male' : p.gender === 'FEMALE' ? 'Female' : '—'}</td>
+                    <td style={{ fontSize: 12 }}>{p.dob || '—'}</td>
+                    <td style={{ fontSize: 12 }}>{p.other_id_type}</td>
+                    <td style={{ fontFamily: 'monospace', fontSize: 12 }}>{p.id_number || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <button className="btn btn-secondary" onClick={() => { setStep(2); setError(''); }}>← Back</button>
-            <button className="btn btn-success" onClick={handleSubmit} disabled={submitting}>
-              {submitting ? 'Submitting…' : '✓ Submit Request'}
+          <div style={{
+            background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12,
+            padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#15803d',
+          }}>
+            ✅ Please review all details above before submitting. Once submitted, PIC Travel will be notified to process your request.
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <button
+              style={{
+                padding: '10px 20px', borderRadius: 12, fontSize: 13, fontWeight: 600,
+                background: '#f1f5f9', color: 'var(--navy)', border: 'none', cursor: 'pointer',
+              }}
+              onClick={() => { setStep(2); setError(''); }}
+            >
+              ← Back
+            </button>
+            <button
+              style={{
+                padding: '11px 32px', borderRadius: 12, fontSize: 14, fontWeight: 700,
+                background: submitting ? '#86efac' : 'linear-gradient(135deg, #15803d, #16a34a)',
+                color: '#fff', border: 'none',
+                cursor: submitting ? 'not-allowed' : 'pointer',
+                boxShadow: '0 4px 14px rgba(22,163,74,.35)',
+              }}
+              onClick={handleSubmit}
+              disabled={submitting}
+            >
+              {submitting ? '⏳ Submitting…' : '✓ Submit Request'}
             </button>
           </div>
         </div>
