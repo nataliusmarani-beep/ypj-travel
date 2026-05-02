@@ -605,6 +605,18 @@ export default function NewRequestPage({ user }) {
                     </div>
                   </div>
 
+                  {/* Employee ID — EMP only */}
+                  {p.category === 'EMP' && p._profileKey && (
+                    <div className="form-group" style={{ marginBottom: 10 }}>
+                      <label className="form-label">Employee ID</label>
+                      <input className="form-input" value={p.uid} readOnly
+                        style={{ background: '#f1f5f9', color: 'var(--muted)' }} />
+                      {!p.uid && (
+                        <div style={{ fontSize: 11, color: '#d97706', marginTop: 3 }}>⚠️ Employee ID not set in profile — please update your profile</div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Dependent ID + Sponsor UID — DPN only */}
                   {p.category === 'DPN' && p._profileKey && (
                     <div className="form-row" style={{ marginBottom: 10 }}>
