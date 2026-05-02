@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { api } from './api.js';
 import Topbar from './components/Layout/Topbar.jsx';
 import Sidebar from './components/Layout/Sidebar.jsx';
+import MobileNav from './components/Layout/MobileNav.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SetPasswordPage from './pages/SetPasswordPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
@@ -73,6 +74,7 @@ export default function App() {
           YPJ Travel © {new Date().getFullYear()} &nbsp;·&nbsp; <a href="mailto:nmarani@fmi.com" style={{color:'var(--muted)'}}>nmarani@fmi.com</a>
         </footer>
       </div>
+      <MobileNav user={user} onLogout={handleLogout} />
     </div>
   );
 }

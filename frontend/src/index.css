@@ -580,6 +580,15 @@ button { font-family: inherit; }
 }
 
 /* ── Mobile Responsive ── */
+/* ── Mobile bottom navigation bar ── */
+.mobile-bottom-nav {
+  display: none;
+}
+
+.mobile-drawer-overlay {
+  display: none;
+}
+
 @media (max-width: 768px) {
   .topbar-left div { display: none; }
 
@@ -593,6 +602,7 @@ button { font-family: inherit; }
 
   .main-content {
     height: 100vh;
+    padding-bottom: 60px; /* leave room for bottom nav */
   }
 
   .form-row {
@@ -601,6 +611,7 @@ button { font-family: inherit; }
 
   .page-content {
     padding: 16px;
+    padding-bottom: 24px;
   }
 
   .stats-grid {
@@ -619,5 +630,53 @@ button { font-family: inherit; }
   .filter-bar select,
   .filter-bar input {
     width: 100%;
+  }
+
+  /* ── Bottom tab bar ── */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    z-index: 1000;
+    padding: 0 4px;
+    padding-bottom: env(safe-area-inset-bottom, 0px); /* iOS home bar */
+    align-items: stretch;
+  }
+
+  /* ── Slide-up drawer overlay ── */
+  .mobile-drawer-overlay {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 2000;
+    align-items: flex-end;
+  }
+
+  .mobile-drawer {
+    background: #ffffff;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    animation: slideUp 0.22s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* Hide the topbar sign-out button on mobile (in drawer instead) */
+  .topbar-right .btn:last-child {
+    display: none;
   }
 }
