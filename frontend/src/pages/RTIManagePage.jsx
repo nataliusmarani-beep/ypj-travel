@@ -142,7 +142,7 @@ export default function RTIManagePage({ user }) {
         <div style={{ position: 'absolute', right: -30, top: -30, width: 160, height: 160, borderRadius: '50%', background: 'rgba(255,255,255,.06)' }} />
         <div style={{ position: 'relative' }}>
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
-            📅 RTI Management
+            📅 Routine Travel Itinerary (RTI)
           </div>
           <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Manage RTI Events</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>
