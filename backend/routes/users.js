@@ -11,7 +11,9 @@ const isManager = r => r === 'Manager';
 router.get('/', async (req, res) => {
   if (!isPIC(req.user.role)) return res.status(403).json({ error: 'Forbidden.' });
   const { rows } = await pool.query(
-    'SELECT id,name,email,role,employee_id,unit,is_active,created_at FROM users ORDER BY name'
+    `SELECT id,name,email,role,employee_id,unit,is_active,created_at,
+            date_of_hire,point_of_hire,date_of_service,tribe,employee_status,marriage_date
+     FROM users ORDER BY name`
   );
   res.json(rows);
 });
@@ -122,9 +124,25 @@ router.post('/', async (req, res) => {
 // PUT /api/users/:id
 router.put('/:id', async (req, res) => {
   if (!isManager(req.user.role)) return res.status(403).json({ error: 'Forbidden.' });
-  const { name, email, role, employee_id, unit, is_active, password } = req.body;
-  const sets = ['name=$1','email=$2','role=$3','employee_id=$4','unit=$5','is_active=$6'];
-  const vals = [name, email.toLowerCase().trim(), role, employee_id||null, unit||'All', is_active !== false];
+  const {
+    name, email, role, employee_id, unit, is_active, password,
+    date_of_hire, point_of_hire, date_of_service, tribe, employee_status, marriage_date,
+  } = req.body;
+
+  const sets = [
+    'name=$1','email=$2','role=$3','employee_id=$4','unit=$5','is_active=$6',
+    'date_of_hire=$7','point_of_hire=$8','date_of_service=$9',
+    'tribe=$10','employee_status=$11','marriage_date=$12',
+  ];
+  const vals = [
+    name, email.toLowerCase().trim(), role, employee_id||null, unit||'All', is_active !== false,
+    date_of_hire    || null,
+    point_of_hire   || null,
+    date_of_service || null,
+    tribe           || null,
+    employee_status || null,
+    marriage_date   || null,
+  ];
 
   if (password && password.length >= 6) {
     sets.push(`password_hash=$${vals.length+1}`);

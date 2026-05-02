@@ -149,6 +149,13 @@ async function initDB() {
     await client.query(`ALTER TABLE passengers DROP CONSTRAINT IF EXISTS passengers_category_check`);
     await client.query(`ALTER TABLE passengers ADD  CONSTRAINT passengers_category_check
       CHECK(category IN ('EMP','DPN','VST'))`);
+    // Employee profile extra fields
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_hire    DATE;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS point_of_hire   TEXT;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS date_of_service DATE;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS tribe           TEXT;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS employee_status TEXT;`);
+    await client.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS marriage_date   DATE;`);
     // Widen payment_method to include new options
     await client.query(`ALTER TABLE travel_requests DROP CONSTRAINT IF EXISTS travel_requests_payment_method_check`);
     await client.query(`ALTER TABLE travel_requests ADD  CONSTRAINT travel_requests_payment_method_check

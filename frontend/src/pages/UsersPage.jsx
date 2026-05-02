@@ -3,8 +3,13 @@ import { api } from '../api.js';
 
 const ROLES = ['Manager', 'PIC Travel', 'Staff'];
 
+const TRIBE_OPTIONS    = ['Papuan 7 Tribes', 'Papuan', 'Non Papua'];
+const STATUS_OPTIONS   = ['Single', 'Single Status', 'Family Status'];
+
 const emptyForm = () => ({
   name: '', email: '', role: 'Staff', employee_id: '', unit: '',
+  date_of_hire: '', point_of_hire: '', date_of_service: '',
+  tribe: '', employee_status: '', marriage_date: '',
 });
 
 function fmtDate(d) {
@@ -54,7 +59,19 @@ export default function UsersPage({ user }) {
 
   const openEdit = (u) => {
     setEditId(u.id);
-    setForm({ name: u.name || '', email: u.email || '', role: u.role || 'Staff', employee_id: u.employee_id || '', unit: u.unit || '' });
+    setForm({
+      name:            u.name            || '',
+      email:           u.email           || '',
+      role:            u.role            || 'Staff',
+      employee_id:     u.employee_id     || '',
+      unit:            u.unit            || '',
+      date_of_hire:    u.date_of_hire    ? u.date_of_hire.slice(0,10)    : '',
+      point_of_hire:   u.point_of_hire   || '',
+      date_of_service: u.date_of_service ? u.date_of_service.slice(0,10) : '',
+      tribe:           u.tribe           || '',
+      employee_status: u.employee_status || '',
+      marriage_date:   u.marriage_date   ? u.marriage_date.slice(0,10)   : '',
+    });
     setError(''); setShowModal(true);
   };
 
@@ -310,6 +327,84 @@ export default function UsersPage({ user }) {
                   placeholder="e.g. SD SMP"
                 />
               </div>
+
+              {/* ── Employment Details ── */}
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase',
+                letterSpacing: '0.08em', marginTop: 16, marginBottom: 12,
+                paddingTop: 14, borderTop: '1px solid var(--border)',
+              }}>
+                📋 Employment Details
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Date of Hire (DOH)</label>
+                  <input
+                    className="form-input" style={{ borderRadius: 10 }}
+                    type="date"
+                    value={form.date_of_hire}
+                    onChange={e => setField('date_of_hire', e.target.value)}
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Date of Service</label>
+                  <input
+                    className="form-input" style={{ borderRadius: 10 }}
+                    type="date"
+                    value={form.date_of_service}
+                    onChange={e => setField('date_of_service', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Point of Hire</label>
+                <input
+                  className="form-input" style={{ borderRadius: 10 }}
+                  value={form.point_of_hire}
+                  onChange={e => setField('point_of_hire', e.target.value)}
+                  placeholder="e.g. Tembagapura, Jakarta"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Tribe</label>
+                  <select
+                    className="form-select" style={{ borderRadius: 10 }}
+                    value={form.tribe}
+                    onChange={e => setField('tribe', e.target.value)}
+                  >
+                    <option value="">— Select —</option>
+                    {TRIBE_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Status</label>
+                  <select
+                    className="form-select" style={{ borderRadius: 10 }}
+                    value={form.employee_status}
+                    onChange={e => setField('employee_status', e.target.value)}
+                  >
+                    <option value="">— Select —</option>
+                    {STATUS_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+
+              {(form.employee_status === 'Single Status' || form.employee_status === 'Family Status') && (
+                <div className="form-group">
+                  <label className="form-label">Marriage Date</label>
+                  <input
+                    className="form-input" style={{ borderRadius: 10 }}
+                    type="date"
+                    value={form.marriage_date}
+                    onChange={e => setField('marriage_date', e.target.value)}
+                  />
+                </div>
+              )}
+
               {!editId && (
                 <div style={{
                   fontSize: 12, color: '#0d9488', background: '#f0fdfa',
