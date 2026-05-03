@@ -58,6 +58,20 @@ export const api = {
   updateFlight:(id,b) => req('PUT',   `/flights/${id}`, b),
   deleteFlight:(id)   => req('DELETE',`/flights/${id}`),
 
+  // Airfast Schedules
+  getAirfastSchedules: ()    => req('GET',    '/airfast'),
+  uploadAirfastSchedule: (formData) => fetch('/api/airfast', {
+    method: 'POST', credentials: 'include', body: formData,
+  }).then(async r => {
+    if (!r.ok) { const e = await r.json().catch(() => ({ error: 'Upload failed' })); throw new Error(e.error); }
+    return r.json();
+  }),
+  downloadAirfastSchedule: (id) => fetch(`/api/airfast/${id}/download`, { credentials: 'include' }).then(r => {
+    if (!r.ok) throw new Error('Download failed');
+    return r.blob();
+  }),
+  deleteAirfastSchedule: (id) => req('DELETE', `/airfast/${id}`),
+
   // Export
   exportRequests: (q='') => req('GET', `/export/requests${q}`),
 };

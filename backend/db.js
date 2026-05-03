@@ -163,6 +163,21 @@ async function initDB() {
     // Add airplane_type column
     await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS airplane_type TEXT;`);
 
+    // Airfast schedule PDF uploads
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS airfast_schedules (
+        id              SERIAL PRIMARY KEY,
+        filename        TEXT NOT NULL,
+        file_size       INTEGER,
+        file_data       BYTEA NOT NULL,
+        uploaded_by     INTEGER REFERENCES users(id),
+        uploaded_by_name TEXT,
+        uploaded_at     TIMESTAMPTZ DEFAULT NOW(),
+        status          TEXT NOT NULL DEFAULT 'active'
+                        CHECK(status IN ('active','expired'))
+      );
+    `);
+
     // Seed first Manager if no users exist
     const { rows } = await client.query('SELECT COUNT(*) AS n FROM users');
     if (parseInt(rows[0].n) === 0) {

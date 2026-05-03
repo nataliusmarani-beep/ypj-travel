@@ -38,6 +38,7 @@ app.use('/api/users',    requireAuth, require('./routes/users'));
 app.use('/api/requests', requireAuth, require('./routes/requests'));
 app.use('/api/rti',      requireAuth, require('./routes/rti'));
 app.use('/api/flights',  requireAuth, require('./routes/flights'));
+app.use('/api/airfast',  requireAuth, require('./routes/airfast'));
 app.use('/api/export',   requireAuth, require('./routes/export'));
 
 // Serve React frontend in production

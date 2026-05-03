@@ -70,7 +70,7 @@ export default function Sidebar({ user }) {
             to="/flights"
             className={({ isActive }) => 'sidebar-item' + (isActive ? ' active' : '')}
           >
-            🛫 Flight Schedules
+            🛫 Airfast Schedule
           </NavLink>
           <NavLink
             to="/export"

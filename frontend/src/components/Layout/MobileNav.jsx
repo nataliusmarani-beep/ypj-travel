@@ -165,7 +165,7 @@ export default function MobileNav({ user, onLogout }) {
                   </div>
                   <DrawerLink to="/requests"  icon="📂" label="All Requests" />
                   <DrawerLink to="/rti-manage" icon="🗂️" label="Manage RTI" />
-                  <DrawerLink to="/flights"   icon="🛫" label="Flight Schedules" />
+                  <DrawerLink to="/flights"   icon="🛫" label="Airfast Schedule" />
                   <DrawerLink to="/export"    icon="⬇️" label="Export Excel" />
                 </>
               )}
