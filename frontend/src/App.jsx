@@ -58,10 +58,10 @@ export default function App() {
             <Route path="/new-request"   element={<NewRequestPage user={user} />} />
             <Route path="/my-requests"   element={<MyRequestsPage user={user} />} />
             <Route path="/rti"           element={<RTIEventsPage user={user} />} />
+            <Route path="/flights"       element={<FlightSchedulesPage user={user} showToast={showToast} />} />
             {isPIC && <>
               <Route path="/requests"    element={<AllRequestsPage user={user} />} />
               <Route path="/rti-manage"  element={<RTIManagePage user={user} />} />
-              <Route path="/flights"     element={<FlightSchedulesPage user={user} />} />
               <Route path="/export"      element={<ExportPage user={user} />} />
             </>}
             {user.role === 'Manager' && (

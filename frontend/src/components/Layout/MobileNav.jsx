@@ -158,14 +158,15 @@ export default function MobileNav({ user, onLogout }) {
             {/* Drawer links */}
             <div style={{ padding: '0 12px', overflowY: 'auto', flex: 1 }}>
 
+              <DrawerLink to="/flights" icon="🛫" label="Airfast Schedule" />
+
               {isPIC && (
                 <>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '4px 8px 8px' }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.08em', padding: '12px 8px 8px' }}>
                     PIC Travel
                   </div>
                   <DrawerLink to="/requests"  icon="📂" label="All Requests" />
                   <DrawerLink to="/rti-manage" icon="🗂️" label="Manage RTI" />
-                  <DrawerLink to="/flights"   icon="🛫" label="Airfast Schedule" />
                   <DrawerLink to="/export"    icon="⬇️" label="Export Excel" />
                 </>
               )}

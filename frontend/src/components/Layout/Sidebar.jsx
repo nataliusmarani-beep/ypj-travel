@@ -49,6 +49,12 @@ export default function Sidebar({ user }) {
       >
         📅 RTI Events
       </NavLink>
+      <NavLink
+        to="/flights"
+        className={({ isActive }) => 'sidebar-item' + (isActive ? ' active' : '')}
+      >
+        🛫 Airfast Schedule
+      </NavLink>
 
       {/* PIC Travel section */}
       {isPIC && (
@@ -65,12 +71,6 @@ export default function Sidebar({ user }) {
             className={({ isActive }) => 'sidebar-item' + (isActive ? ' active' : '')}
           >
             🗂️ Manage RTI
-          </NavLink>
-          <NavLink
-            to="/flights"
-            className={({ isActive }) => 'sidebar-item' + (isActive ? ' active' : '')}
-          >
-            🛫 Airfast Schedule
           </NavLink>
           <NavLink
             to="/export"
