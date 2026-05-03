@@ -166,6 +166,9 @@ async function initDB() {
       CHECK(LOWER(request_type) IN ('regular','rti'))`);
     // Add airplane_type column
     await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS airplane_type TEXT;`);
+    // Track who last actioned the request
+    await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS pic_action_by   TEXT;`);
+    await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS pic_action_at   TIMESTAMPTZ;`);
 
     // Airfast schedule PDF uploads
     await client.query(`

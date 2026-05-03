@@ -187,9 +187,18 @@ export default function MyRequestsPage({ user }) {
                               {det.pic_notes && (
                                 <div style={{
                                   background: '#fffbeb', border: '1px solid #fde68a',
-                                  borderRadius: 8, padding: '8px 14px', marginBottom: 12, fontSize: 13,
+                                  borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13,
                                 }}>
                                   <strong style={{ color: '#92400e' }}>PIC Notes:</strong> <span style={{ color: '#78350f' }}>{det.pic_notes}</span>
+                                  {det.pic_action_by && (
+                                    <div style={{ marginTop: 6, fontSize: 11, color: '#a16207', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <span>👤</span>
+                                      <span><strong>{det.pic_action_by}</strong></span>
+                                      {det.pic_action_at && (
+                                        <span style={{ color: '#ca8a04' }}>· {fmtDate(det.pic_action_at)}</span>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
                               )}
                               {det.notes && (

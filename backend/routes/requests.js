@@ -119,9 +119,11 @@ router.patch('/:id/status', async (req, res) => {
   const { status, pic_notes } = req.body;
 
   const { rows: [updated] } = await pool.query(`
-    UPDATE travel_requests SET status=$1, pic_notes=$2, updated_at=NOW()
-    WHERE id=$3 RETURNING *
-  `, [status, pic_notes||null, req.params.id]);
+    UPDATE travel_requests
+    SET status=$1, pic_notes=$2, updated_at=NOW(),
+        pic_action_by=$3, pic_action_at=NOW()
+    WHERE id=$4 RETURNING *
+  `, [status, pic_notes||null, req.user.name || req.user.email, req.params.id]);
   if (!updated) return res.status(404).json({ error: 'Not found.' });
 
   // Notify submitter on key status changes
