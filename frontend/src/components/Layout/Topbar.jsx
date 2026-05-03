@@ -198,7 +198,6 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
     const e = {};
     if (!d.name.trim())        e.name         = 'Required';
     if (!d.dependent_id.trim()) e.dependent_id = 'Required';
-    if (!d.age)                e.age          = 'Required';
     if (!d.gender)             e.gender       = 'Required';
     if (!d.relation)           e.relation     = 'Required';
     if (!d.ktp_number.trim())  e.ktp_number   = 'Required';
@@ -569,11 +568,15 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">Age <span style={{ color: 'var(--danger)' }}>*</span></label>
-                          <input className="form-input" type="number" min="0" max="120" value={editing.age || ''} {...fi('age', depErrors)}
-                            onChange={e => setEditing(d => ({ ...d, age: e.target.value ? parseInt(e.target.value) : '' }))}
-                            placeholder="Auto-filled from date of birth" />
-                          {errTip('age', depErrors)}
+                          <label className="form-label">Age</label>
+                          <div style={{
+                            padding: '8px 12px', background: '#f8fafc',
+                            border: '1px solid var(--border)', borderRadius: 8,
+                            fontSize: 13, color: editing.age ? 'var(--text)' : 'var(--muted)',
+                            minHeight: 38, display: 'flex', alignItems: 'center',
+                          }}>
+                            {editing.age || '— auto-filled from date of birth'}
+                          </div>
                         </div>
 
                         <div className="form-group">
