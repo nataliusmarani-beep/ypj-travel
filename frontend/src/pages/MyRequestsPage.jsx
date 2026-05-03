@@ -6,6 +6,11 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function fmtDateTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 const STATUS_MAP = {
   submitted:        { color: '#2563eb', bg: '#dbeafe', label: 'Submitted' },
   processing:       { color: '#d97706', bg: '#fef3c7', label: 'Processing' },
@@ -209,7 +214,7 @@ export default function MyRequestsPage({ user }) {
                               <span>👤</span>
                               <span style={{ fontWeight: 400, color: '#b45309' }}>
                                 {det.pic_action_by || 'PIC Travel'}
-                                {det.pic_action_at && <span style={{ color: '#ca8a04', fontWeight: 400 }}> · {fmtDate(det.pic_action_at)}</span>}
+                                {det.pic_action_at && <span style={{ color: '#ca8a04', fontWeight: 400 }}> · {fmtDateTime(det.pic_action_at)}</span>}
                               </span>
                             </div>
                           </div>
