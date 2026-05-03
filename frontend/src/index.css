@@ -590,7 +590,8 @@ button { font-family: inherit; }
 }
 
 @media (max-width: 768px) {
-  .topbar-left div { display: none; }
+  .topbar-left .logo-sub { display: none; }  /* hide subtitle, keep title */
+  .switch-dropdown { display: none; }         /* hide Apps switch button */
 
   .sidebar {
     display: none;
