@@ -149,9 +149,9 @@ export default function NewRequestPage({ user }) {
   const [reqType, setReqType]         = useState(rtiParam ? 'RTI' : 'Regular');
   const [rtiId, setRtiId]             = useState(rtiParam);
   const [transport, setTransport]     = useState('Airplane');
-  const [airplaneType, setAirplaneType] = useState('Commercial');
-  const [purpose, setPurpose]         = useState('VAC');
-  const [payment, setPayment]         = useState('Travel Benefit');
+  const [airplaneType, setAirplaneType] = useState('Airfast Indonesia');
+  const [purpose, setPurpose]         = useState('');
+  const [payment, setPayment]         = useState('');
   const [outType, setOutType]         = useState('DOM');
   const [outFrom, setOutFrom]         = useState('TIM');
   const [outFromOther, setOutFromOther] = useState('');
@@ -252,6 +252,7 @@ export default function NewRequestPage({ user }) {
 
   const validateStep1 = () => {
     if (reqType === 'RTI' && !rtiId) return 'Please select an RTI event.';
+    if (!purpose) return 'Please select a Travel Purpose.';
     if (transport === 'Bus') {
       if (!busOutRoute) return 'Please select a bus route.';
       if (!outDate)     return 'Please select a departure date.';
@@ -260,6 +261,7 @@ export default function NewRequestPage({ user }) {
         if (!inDate)     return 'Please select a return date.';
       }
     } else {
+      if (!payment) return 'Please select a Payment Method.';
       if (!outFrom || !outTo)          return 'Please fill in outbound airports.';
       if (outFrom === 'Other' && !outFromOther.trim()) return 'Please specify the departure airport.';
       if (outTo   === 'Other' && !outToOther.trim())   return 'Please specify the destination airport.';
@@ -504,15 +506,17 @@ export default function NewRequestPage({ user }) {
               </div>
             )}
             <div className="form-group">
-              <label className="form-label">Travel Purpose</label>
-              <select className="form-select" style={selectSx} value={purpose} onChange={e => setPurpose(e.target.value)}>
+              <label className="form-label">Travel Purpose <span style={{ color: '#dc2626' }}>*</span></label>
+              <select className="form-select" style={{ ...selectSx, color: purpose ? 'inherit' : 'var(--muted)' }} value={purpose} onChange={e => setPurpose(e.target.value)}>
+                <option value="" disabled>— Select Travel Purpose —</option>
                 {PURPOSE_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.value} — {o.label}</option>)}
               </select>
             </div>
             {transport === 'Airplane' && (
               <div className="form-group">
-                <label className="form-label">Payment Method</label>
-                <select className="form-select" style={selectSx} value={payment} onChange={e => setPayment(e.target.value)}>
+                <label className="form-label">Payment Method <span style={{ color: '#dc2626' }}>*</span></label>
+                <select className="form-select" style={{ ...selectSx, color: payment ? 'inherit' : 'var(--muted)' }} value={payment} onChange={e => setPayment(e.target.value)}>
+                  <option value="" disabled>— Select Payment Method —</option>
                   {PAYMENT_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
                 </select>
               </div>
