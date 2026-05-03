@@ -76,9 +76,16 @@ export default function UsersPage({ user }) {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim())  { setError('Name is required.'); return; }
-    if (!form.email.trim()) { setError('Email is required.'); return; }
+    if (!form.name.trim())         { setError('Full name is required.'); return; }
+    if (!form.email.trim())        { setError('Email address is required.'); return; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError('Invalid email address.'); return; }
+    if (!form.employee_id.trim())  { setError('Employee ID is required.'); return; }
+    if (!form.unit)                { setError('Unit / Department is required.'); return; }
+    if (!form.date_of_hire)        { setError('Date of Hire is required.'); return; }
+    if (!form.date_of_service)     { setError('Date of Service is required.'); return; }
+    if (!form.point_of_hire.trim()){ setError('Point of Hire is required.'); return; }
+    if (!form.tribe)               { setError('Tribe is required.'); return; }
+    if (!form.employee_status)     { setError('Status is required.'); return; }
     setSaving(true); setError('');
     try {
       if (editId) {
@@ -296,20 +303,20 @@ export default function UsersPage({ user }) {
                   type="email"
                   value={form.email}
                   onChange={e => setField('email', e.target.value)}
-                  placeholder="e.g. budi@ypj.sch.id"
+                  placeholder="e.g. you@fmi.com"
                   disabled={!!editId}
                 />
                 {editId && <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 4 }}>Email cannot be changed after creation.</div>}
               </div>
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Role</label>
+                  <label className="form-label">Role <span style={{ color: '#dc2626' }}>*</span></label>
                   <select className="form-select" style={{ borderRadius: 10 }} value={form.role} onChange={e => setField('role', e.target.value)}>
                     {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Employee ID</label>
+                  <label className="form-label">Employee ID <span style={{ color: '#dc2626' }}>*</span></label>
                   <input
                     className="form-input" style={{ borderRadius: 10 }}
                     value={form.employee_id}
@@ -319,7 +326,7 @@ export default function UsersPage({ user }) {
                 </div>
               </div>
               <div className="form-group">
-                <label className="form-label">Unit / Department</label>
+                <label className="form-label">Unit / Department <span style={{ color: '#dc2626' }}>*</span></label>
                 <select
                   className="form-select" style={{ borderRadius: 10 }}
                   value={form.unit}
@@ -342,7 +349,7 @@ export default function UsersPage({ user }) {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Date of Hire</label>
+                  <label className="form-label">Date of Hire <span style={{ color: '#dc2626' }}>*</span></label>
                   <input
                     className="form-input" style={{ borderRadius: 10 }}
                     type="date"
@@ -351,7 +358,7 @@ export default function UsersPage({ user }) {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Date of Service</label>
+                  <label className="form-label">Date of Service <span style={{ color: '#dc2626' }}>*</span></label>
                   <input
                     className="form-input" style={{ borderRadius: 10 }}
                     type="date"
@@ -362,7 +369,7 @@ export default function UsersPage({ user }) {
               </div>
 
               <div className="form-group">
-                <label className="form-label">Point of Hire</label>
+                <label className="form-label">Point of Hire <span style={{ color: '#dc2626' }}>*</span></label>
                 <input
                   className="form-input" style={{ borderRadius: 10 }}
                   value={form.point_of_hire}
@@ -373,7 +380,7 @@ export default function UsersPage({ user }) {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label className="form-label">Tribe</label>
+                  <label className="form-label">Tribe <span style={{ color: '#dc2626' }}>*</span></label>
                   <select
                     className="form-select" style={{ borderRadius: 10 }}
                     value={form.tribe}
@@ -384,7 +391,7 @@ export default function UsersPage({ user }) {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Status</label>
+                  <label className="form-label">Status <span style={{ color: '#dc2626' }}>*</span></label>
                   <select
                     className="form-select" style={{ borderRadius: 10 }}
                     value={form.employee_status}

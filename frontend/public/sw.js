@@ -1,4 +1,4 @@
-const CACHE = 'ypj-travel-v9';
+const CACHE = 'ypj-travel-v10';
 const PRECACHE = ['/', '/manifest.json'];
 
 self.addEventListener('install', e => {
