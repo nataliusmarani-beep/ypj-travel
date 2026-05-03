@@ -569,14 +569,14 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
 
                         <div className="form-group">
                           <label className="form-label">Age</label>
-                          <div style={{
-                            padding: '8px 12px', background: '#f8fafc',
-                            border: '1px solid var(--border)', borderRadius: 8,
-                            fontSize: 13, color: editing.age ? 'var(--text)' : 'var(--muted)',
-                            minHeight: 38, display: 'flex', alignItems: 'center',
-                          }}>
-                            {editing.age || '— auto-filled from date of birth'}
-                          </div>
+                          <input
+                            className="form-input"
+                            type="number"
+                            value={editing.age || ''}
+                            readOnly
+                            placeholder="Auto-filled from date of birth"
+                            style={{ background: '#f8fafc', cursor: 'not-allowed', color: editing.age ? 'var(--text)' : 'var(--muted)' }}
+                          />
                         </div>
 
                         <div className="form-group">
