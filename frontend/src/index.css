@@ -626,8 +626,15 @@ button { font-family: inherit; }
   }
 
   .app-footer {
-    margin-bottom: 70px; /* clear fixed bottom nav */
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 4px;
+    padding-top: 16px;
+    margin-top: 32px;
+    margin-bottom: 70px;
   }
+  .footer-links { white-space: normal; }
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
