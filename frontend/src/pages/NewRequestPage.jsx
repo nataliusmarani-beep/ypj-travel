@@ -146,7 +146,7 @@ export default function NewRequestPage({ user }) {
   const [successId, setSuccessId]   = useState(null);
 
   /* Step 1 fields */
-  const [reqType, setReqType]         = useState(rtiParam ? 'RTI' : 'Regular');
+  const [reqType, setReqType]         = useState(rtiParam ? 'RTI' : '');
   const [rtiId, setRtiId]             = useState(rtiParam);
   const [transport, setTransport]     = useState('Airplane');
   const [airplaneType, setAirplaneType] = useState('Airfast Indonesia');
@@ -251,6 +251,7 @@ export default function NewRequestPage({ user }) {
   const resolveAirport = (val, other) => val === 'Other' ? other : val;
 
   const validateStep1 = () => {
+    if (!reqType)                    return 'Please select a Request Type.';
     if (reqType === 'RTI' && !rtiId) return 'Please select an RTI event.';
     if (!purpose) return 'Please select a Travel Purpose.';
     if (transport === 'Bus') {
@@ -474,17 +475,18 @@ export default function NewRequestPage({ user }) {
           <SectionHeading>🗂️ Request Info</SectionHeading>
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Request Type</label>
-              <select className="form-select" style={selectSx} value={reqType} onChange={e => setReqType(e.target.value)}>
+              <label className="form-label">Request Type <span style={{ color: '#dc2626' }}>*</span></label>
+              <select className="form-select" style={{ ...selectSx, color: reqType ? 'inherit' : 'var(--muted)' }} value={reqType} onChange={e => setReqType(e.target.value)}>
+                <option value="" disabled>— Select Request Type —</option>
                 <option value="Regular">Regular</option>
                 <option value="RTI">RTI — Registered Travel</option>
               </select>
             </div>
             {reqType === 'RTI' && (
               <div className="form-group">
-                <label className="form-label">RTI Event</label>
-                <select className="form-select" style={selectSx} value={rtiId} onChange={e => setRtiId(e.target.value)}>
-                  <option value="">— Select RTI Event —</option>
+                <label className="form-label">RTI Event <span style={{ color: '#dc2626' }}>*</span></label>
+                <select className="form-select" style={{ ...selectSx, color: rtiId ? 'inherit' : 'var(--muted)' }} value={rtiId} onChange={e => setRtiId(e.target.value)}>
+                  <option value="" disabled>— Select RTI Event —</option>
                   {rtis.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
                 </select>
               </div>
