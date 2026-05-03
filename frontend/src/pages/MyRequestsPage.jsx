@@ -160,8 +160,8 @@ export default function MyRequestsPage({ user }) {
                     return (
                       <>
                         <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => loadDetail(r.id)}>
-                          <td style={{ color: 'var(--muted)', fontWeight: 600, width: 40 }}>{idx + 1}</td>
-                          <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--muted)' }}>{fmtDate(r.created_at)}</td>
+                          <td style={{ color: 'var(--muted)', fontWeight: 700, width: 40, fontSize: 12 }}>#{r.id}</td>
+                          <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--muted)' }}>{fmtDate(r.submitted_at)}</td>
                           <td>
                             <div style={{ fontWeight: 600, fontSize: 13 }}>{r.outbound_from} → {r.outbound_to}</div>
                             {r.has_return && <div style={{ fontSize: 11, color: 'var(--muted)' }}>↩ {r.inbound_from} → {r.inbound_to}</div>}
@@ -183,7 +183,7 @@ export default function MyRequestsPage({ user }) {
                         </tr>
                         {isOpen && det && (
                           <tr key={`${r.id}-detail`}>
-                            <td colSpan={9} style={{ background: '#f8fafc', padding: '16px 20px' }}>
+                            <td colSpan={8} style={{ background: '#f8fafc', padding: '16px 20px' }}>
                               {det.pic_notes && (
                                 <div style={{
                                   background: '#fffbeb', border: '1px solid #fde68a',
@@ -206,13 +206,13 @@ export default function MyRequestsPage({ user }) {
                                     <thead>
                                       <tr>
                                         <th>Name</th><th>Cat</th><th>UID</th><th>Gender</th>
-                                        <th>ID Type</th><th>ID No.</th><th>Booking Ref</th><th>Seat</th>
+                                        <th>ID Type</th><th>ID No.</th><th>Booking Ref</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {det.passengers.map(p => (
                                         <tr key={p.id}>
-                                          <td style={{ fontWeight: 600 }}>{p.name}</td>
+                                          <td style={{ fontWeight: 600 }}>{p.passenger_name}</td>
                                           <td>
                                             <span style={{
                                               padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -225,7 +225,6 @@ export default function MyRequestsPage({ user }) {
                                           <td>{p.id_type || '—'}</td>
                                           <td>{p.id_number || '—'}</td>
                                           <td>{p.booking_ref || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
-                                          <td>{p.seat_number || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                                         </tr>
                                       ))}
                                     </tbody>
