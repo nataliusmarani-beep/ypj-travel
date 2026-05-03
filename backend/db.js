@@ -160,6 +160,10 @@ async function initDB() {
     await client.query(`ALTER TABLE travel_requests DROP CONSTRAINT IF EXISTS travel_requests_payment_method_check`);
     await client.query(`ALTER TABLE travel_requests ADD  CONSTRAINT travel_requests_payment_method_check
       CHECK(payment_method IN ('Cash','Travel Benefit','Travel Allowance','Special Anniversary','Family Visit','Papuan Reward','Cobus','Emergency','Medical',''))`);
+    // Widen request_type to accept both cases (Regular/regular, RTI/rti)
+    await client.query(`ALTER TABLE travel_requests DROP CONSTRAINT IF EXISTS travel_requests_request_type_check`);
+    await client.query(`ALTER TABLE travel_requests ADD  CONSTRAINT travel_requests_request_type_check
+      CHECK(LOWER(request_type) IN ('regular','rti'))`);
     // Add airplane_type column
     await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS airplane_type TEXT;`);
 

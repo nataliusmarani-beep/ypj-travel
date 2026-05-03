@@ -322,7 +322,7 @@ export default function NewRequestPage({ user }) {
     try {
       const isBus = transport === 'Bus';
       const payload = {
-        request_type:    reqType,
+        request_type:    reqType.toLowerCase(),
         rti_event_id:    reqType === 'RTI' ? rtiId : null,
         transport_type:  isBus ? 'bus' : 'plane',
         airplane_type:   !isBus ? airplaneType : null,
