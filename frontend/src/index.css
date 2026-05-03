@@ -684,3 +684,19 @@ button { font-family: inherit; }
     display: none;
   }
 }
+
+/* ── RTI Ticker ──────────────────────────────────────────────── */
+.rti-ticker-text {
+  display: flex;
+  white-space: nowrap;
+  animation: tickerScroll 28s linear infinite;
+  padding: 9px 0;
+}
+.rti-ticker-text:hover {
+  animation-play-state: paused;
+}
+
+@keyframes tickerScroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

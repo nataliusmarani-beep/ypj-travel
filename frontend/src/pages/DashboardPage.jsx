@@ -59,6 +59,69 @@ function StatCard({ icon, value, label, color = 'var(--navy)', accent }) {
   );
 }
 
+/* ── RTI Countdown Ticker ──────────────────────────────────────── */
+function RtiTicker({ rtis }) {
+  if (!rtis || rtis.length === 0) return null;
+
+  const now = new Date();
+  const items = rtis.map(rti => {
+    const deadline = rti.deadline ? new Date(rti.deadline) : null;
+    const daysLeft = deadline ? Math.ceil((deadline - now) / 86400000) : null;
+    const isPast   = deadline && deadline < now;
+    if (isPast) return null;
+
+    const urgent   = daysLeft !== null && daysLeft <= 3;
+    const warning  = daysLeft !== null && daysLeft <= 7 && daysLeft > 3;
+    const label    = daysLeft === 0
+      ? 'closes TODAY'
+      : daysLeft === 1
+        ? '1 day left'
+        : `${daysLeft} days left`;
+
+    return { rti, label, urgent, warning };
+  }).filter(Boolean);
+
+  if (items.length === 0) return null;
+
+  const hasUrgent  = items.some(i => i.urgent);
+  const hasWarning = items.some(i => i.warning);
+
+  const bg      = hasUrgent  ? '#fef2f2' : hasWarning ? '#fffbeb' : '#f0fdf4';
+  const border  = hasUrgent  ? '#fca5a5' : hasWarning ? '#fde68a' : '#86efac';
+  const iconClr = hasUrgent  ? '#dc2626' : hasWarning ? '#d97706' : '#16a34a';
+  const textClr = hasUrgent  ? '#991b1b' : hasWarning ? '#92400e' : '#14532d';
+
+  const tickerText = items.map(({ rti, label, urgent }) =>
+    `${urgent ? '🔴' : '📅'}  ${rti.name}  —  ${label} to submit`
+  ).join('     ·     ');
+
+  return (
+    <div style={{
+      background: bg, border: `1px solid ${border}`,
+      borderRadius: 10, marginBottom: 18,
+      display: 'flex', alignItems: 'center', overflow: 'hidden',
+      boxShadow: '0 1px 4px rgba(0,0,0,.06)',
+    }}>
+      {/* Static label */}
+      <div style={{
+        padding: '9px 14px', background: iconClr, color: '#fff',
+        fontWeight: 800, fontSize: 12, whiteSpace: 'nowrap',
+        letterSpacing: 0.5, flexShrink: 0,
+      }}>
+        📢 RTI NOTICE
+      </div>
+
+      {/* Scrolling text */}
+      <div style={{ overflow: 'hidden', flex: 1, position: 'relative' }}>
+        <div className="rti-ticker-text" style={{ color: textClr, fontWeight: 600, fontSize: 13 }}>
+          {/* duplicate for seamless loop */}
+          <span>{tickerText}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{tickerText}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage({ user }) {
   const [stats, setStats]       = useState(null);
   const [requests, setRequests] = useState([]);
@@ -80,14 +143,10 @@ export default function DashboardPage({ user }) {
       api.getRequests(isPIC ? '?limit=5' : '?my=1&limit=5')
         .then(d => setRequests(d.requests || d))
         .catch(() => {}),
+      api.getRTIs()
+        .then(d => setRtis(d.filter(r => r.status === 'open')))
+        .catch(() => {}),
     ];
-    if (!isPIC) {
-      loads.push(
-        api.getRTIs()
-          .then(d => setRtis(d.filter(r => r.status === 'open')))
-          .catch(() => {})
-      );
-    }
     Promise.all(loads).finally(() => setLoading(false));
   }, [isPIC]);
 
@@ -164,6 +223,7 @@ export default function DashboardPage({ user }) {
 
     return (
       <div>
+        <RtiTicker rtis={rtis} />
         <HeroBanner
           actions={
             <button
@@ -320,6 +380,7 @@ export default function DashboardPage({ user }) {
 
   return (
     <div>
+      <RtiTicker rtis={rtis} />
       <HeroBanner
         actions={
           <>
