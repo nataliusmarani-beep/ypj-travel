@@ -60,7 +60,7 @@ export default function LoginPage({ onLogin }) {
             boxShadow: '0 8px 24px rgba(37,99,235,.35)',
           }}>✈️</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: 'var(--navy)', letterSpacing: -0.5 }}>YPJ Travel</div>
-          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, fontWeight: 500 }}>Campus Travel Management System</div>
+          <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 4, fontWeight: 500 }}>School Travel Management System</div>
         </div>
 
         {error && (
@@ -81,7 +81,7 @@ export default function LoginPage({ onLogin }) {
               autoComplete="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="you@ypj.sch.id"
+              placeholder="you@fmi.com"
               disabled={loading}
               style={{ borderRadius: 10 }}
             />

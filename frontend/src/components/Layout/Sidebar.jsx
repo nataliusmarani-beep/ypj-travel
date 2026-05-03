@@ -19,7 +19,7 @@ export default function Sidebar({ user }) {
       <div className="sidebar-logo">
         <div style={{ fontSize: 24, marginBottom: 6 }}>✈️</div>
         <div className="sidebar-logo-text">YPJ Travel</div>
-        <div className="sidebar-logo-sub">Campus Travel System</div>
+        <div className="sidebar-logo-sub">School Travel System</div>
       </div>
 
       {/* Main section */}

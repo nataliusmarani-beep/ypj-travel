@@ -251,7 +251,7 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
           <span className="logo-icon">✈️</span>
           <div>
             <div className="logo-text">YPJ Travel</div>
-            <div className="logo-sub">Campus Travel System</div>
+            <div className="logo-sub">School Travel System</div>
           </div>
         </div>
 
@@ -462,10 +462,10 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                     </div>
 
                     <div className="form-group">
-                      <label className="form-label">Campus Location <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <label className="form-label">School Location <span style={{ color: 'var(--danger)' }}>*</span></label>
                       <select className="form-select" value={prof.campus_location} {...fi('campus_location', profErrors)}
                         onChange={e => setProf(p => ({ ...p, campus_location: e.target.value }))}>
-                        <option value="">— Select Campus —</option>
+                        <option value="">— Select School —</option>
                         {CAMPUS_OPTIONS.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
                       {errTip('campus_location', profErrors)}
