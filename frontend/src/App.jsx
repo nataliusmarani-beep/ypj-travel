@@ -4,6 +4,7 @@ import { api } from './api.js';
 import Topbar from './components/Layout/Topbar.jsx';
 import Sidebar from './components/Layout/Sidebar.jsx';
 import MobileNav from './components/Layout/MobileNav.jsx';
+import Toast from './components/Toast.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import SetPasswordPage from './pages/SetPasswordPage.jsx';
 import DashboardPage from './pages/DashboardPage.jsx';
@@ -17,9 +18,12 @@ import ExportPage from './pages/ExportPage.jsx';
 import UsersPage from './pages/UsersPage.jsx';
 
 export default function App() {
-  const [user, setUser]   = useState(null);
+  const [user, setUser]     = useState(null);
   const [loading, setLoading] = useState(true);
+  const [toast, setToast]   = useState(null);
   const navigate = useNavigate();
+
+  const showToast = (message, type = 'info') => setToast({ message, type });
 
   useEffect(() => {
     api.me().then(setUser).catch(() => setUser(null)).finally(() => setLoading(false));
@@ -75,6 +79,7 @@ export default function App() {
         </footer>
       </div>
       <MobileNav user={user} onLogout={handleLogout} />
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </div>
   );
 }
