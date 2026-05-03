@@ -275,15 +275,25 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
           )}
 
           <div
-            className="user-avatar"
-            style={{ background: (user.avatar) ? 'transparent' : avatarColor, padding: 0, overflow: 'hidden', cursor: 'pointer' }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
             onClick={() => setProfileOpen(true)}
             title="My Profile"
           >
-            {user.avatar
-              ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              : initial
-            }
+            <div className="topbar-userinfo-mobile">
+              <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--navy)', lineHeight: 1.2 }}>
+                {(user.name || user.email || '').split(' ')[0]}
+              </div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.2 }}>{user.role}</div>
+            </div>
+            <div
+              className="user-avatar"
+              style={{ background: (user.avatar) ? 'transparent' : avatarColor, padding: 0, overflow: 'hidden' }}
+            >
+              {user.avatar
+                ? <img src={user.avatar} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                : initial
+              }
+            </div>
           </div>
 
           <button className="btn btn-ghost btn-sm" onClick={onLogout}>Sign Out</button>
