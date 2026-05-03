@@ -130,126 +130,150 @@ export default function MyRequestsPage({ user }) {
               <div style={{ fontSize: 40, marginBottom: 12 }}>🗂️</div>
               <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--navy)', marginBottom: 6 }}>No requests found</div>
               <div style={{ fontSize: 13, color: 'var(--muted)' }}>
-                {filterStatus === 'all' ? 'You haven\'t submitted any travel requests yet.' : `No requests with status "${STATUS_MAP[filterStatus]?.label || filterStatus}".`}
+                {filterStatus === 'all' ? "You haven't submitted any travel requests yet." : `No requests with status "${STATUS_MAP[filterStatus]?.label || filterStatus}".`}
               </div>
             </div>
           ) : (
-            <div style={{
-              background: '#fff', borderRadius: 16, overflow: 'hidden',
-              boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
-            }}>
-              <table className="table">
-                <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Submitted</th>
-                    <th>Route</th>
-                    <th>Travel Date</th>
-                    <th>Transport</th>
-                    <th>Purpose</th>
-                    <th>Pax</th>
-                    <th>Status</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((r, idx) => {
-                    const isOpen = expanded === r.id;
-                    const det    = detail[r.id];
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {filtered.map(r => {
+                const isOpen = expanded === r.id;
+                const det    = detail[r.id];
 
-                    return (
-                      <>
-                        <tr key={r.id} style={{ cursor: 'pointer' }} onClick={() => loadDetail(r.id)}>
-                          <td style={{ color: 'var(--muted)', fontWeight: 700, width: 40, fontSize: 12 }}>#{r.id}</td>
-                          <td style={{ whiteSpace: 'nowrap', fontSize: 12, color: 'var(--muted)' }}>{fmtDate(r.submitted_at)}</td>
-                          <td>
-                            <div style={{ fontWeight: 600, fontSize: 13 }}>{r.outbound_from} → {r.outbound_to}</div>
-                            {r.has_return && <div style={{ fontSize: 11, color: 'var(--muted)' }}>↩ {r.inbound_from} → {r.inbound_to}</div>}
-                          </td>
-                          <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(r.outbound_date)}</td>
-                          <td style={{ fontSize: 12 }}>{r.transport_type}</td>
-                          <td style={{ fontSize: 12 }}>{PURPOSE_LABEL[r.travel_purpose] || r.travel_purpose || r.purpose}</td>
-                          <td style={{ textAlign: 'center' }}>{r.passenger_count ?? (det?.passengers?.length ?? '—')}</td>
-                          <td><StatusPill status={r.status} /></td>
-                          <td>
-                            <button
-                              className="btn btn-ghost btn-sm"
-                              onClick={e => { e.stopPropagation(); loadDetail(r.id); }}
-                              style={{ fontSize: 11, borderRadius: 8, whiteSpace: 'nowrap' }}
-                            >
-                              {isOpen ? '▲ Hide' : '▼ Details'}
-                            </button>
-                          </td>
-                        </tr>
-                        {isOpen && det && (
-                          <tr key={`${r.id}-detail`}>
-                            <td colSpan={8} style={{ background: '#f8fafc', padding: '16px 20px' }}>
-                              {det.pic_notes && (
-                                <div style={{
-                                  background: '#fffbeb', border: '1px solid #fde68a',
-                                  borderRadius: 8, padding: '10px 14px', marginBottom: 12, fontSize: 13,
-                                }}>
-                                  <strong style={{ color: '#92400e' }}>PIC Notes:</strong> <span style={{ color: '#78350f' }}>{det.pic_notes}</span>
-                                  {det.pic_action_by && (
-                                    <div style={{ marginTop: 6, fontSize: 11, color: '#a16207', display: 'flex', alignItems: 'center', gap: 6 }}>
-                                      <span>👤</span>
-                                      <span><strong>{det.pic_action_by}</strong></span>
-                                      {det.pic_action_at && (
-                                        <span style={{ color: '#ca8a04' }}>· {fmtDate(det.pic_action_at)}</span>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {det.notes && (
-                                <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text)' }}>
-                                  <strong>Notes:</strong> {det.notes}
-                                </div>
-                              )}
-                              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-                                Passengers
+                return (
+                  <div key={r.id} style={{
+                    background: '#fff', borderRadius: 16, overflow: 'hidden',
+                    boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+                    border: isOpen ? '1.5px solid var(--primary)' : '1.5px solid transparent',
+                  }}>
+                    {/* ── Request card header ── */}
+                    <div
+                      style={{ padding: '16px 18px', cursor: 'pointer' }}
+                      onClick={() => loadDetail(r.id)}
+                    >
+                      {/* Row 1: # + status + date */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)' }}>#{r.id}</span>
+                          <StatusPill status={r.status} />
+                        </div>
+                        <span style={{ fontSize: 11, color: 'var(--muted)' }}>{fmtDate(r.submitted_at)}</span>
+                      </div>
+
+                      {/* Row 2: Route */}
+                      <div style={{ fontSize: 17, fontWeight: 800, color: 'var(--navy)', marginBottom: 4 }}>
+                        {r.outbound_from} → {r.outbound_to}
+                      </div>
+                      {r.has_inbound && (
+                        <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>
+                          ↩ {r.inbound_from} → {r.inbound_to}
+                        </div>
+                      )}
+
+                      {/* Row 3: chips */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
+                        {[
+                          ['✈️', r.transport_type],
+                          ['📅', fmtDate(r.outbound_date)],
+                          ['🎯', PURPOSE_LABEL[r.travel_purpose] || r.travel_purpose],
+                          ['👥', `${r.passenger_count ?? '?'} pax`],
+                        ].map(([icon, val]) => val && (
+                          <span key={icon} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 4,
+                            background: '#f1f5f9', borderRadius: 20,
+                            padding: '3px 10px', fontSize: 11, color: 'var(--text)',
+                          }}>
+                            {icon} {val}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Toggle */}
+                      <div style={{ marginTop: 10, fontSize: 11, color: 'var(--primary)', fontWeight: 600 }}>
+                        {isOpen ? '▲ Hide details' : '▼ Show details'}
+                      </div>
+                    </div>
+
+                    {/* ── Expanded detail ── */}
+                    {isOpen && det && (
+                      <div style={{ borderTop: '1px solid var(--border)', background: '#f8fafc', padding: '16px 18px' }}>
+
+                        {/* PIC Notes */}
+                        {det.pic_notes && (
+                          <div style={{
+                            background: '#fffbeb', border: '1px solid #fde68a',
+                            borderRadius: 10, padding: '10px 14px', marginBottom: 14,
+                          }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>📋 PIC Notes</div>
+                            <div style={{ fontSize: 13, color: '#78350f' }}>{det.pic_notes}</div>
+                            {det.pic_action_by && (
+                              <div style={{ marginTop: 6, fontSize: 11, color: '#a16207', display: 'flex', alignItems: 'center', gap: 5 }}>
+                                <span>👤</span>
+                                <strong>{det.pic_action_by}</strong>
+                                {det.pic_action_at && <span style={{ color: '#ca8a04' }}>· {fmtDate(det.pic_action_at)}</span>}
                               </div>
-                              {det.passengers && det.passengers.length > 0 ? (
-                                <div style={{ overflowX: 'auto' }}>
-                                  <table className="table" style={{ fontSize: 12 }}>
-                                    <thead>
-                                      <tr>
-                                        <th>Name</th><th>Cat</th><th>UID</th><th>Gender</th>
-                                        <th>ID Type</th><th>ID No.</th><th>Booking Ref</th>
-                                      </tr>
-                                    </thead>
-                                    <tbody>
-                                      {det.passengers.map(p => (
-                                        <tr key={p.id}>
-                                          <td style={{ fontWeight: 600 }}>{p.passenger_name}</td>
-                                          <td>
-                                            <span style={{
-                                              padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                                              background: p.category === 'EMP' ? '#dbeafe' : p.category === 'DPN' ? '#fef3c7' : '#f3e8ff',
-                                              color: p.category === 'EMP' ? '#1d4ed8' : p.category === 'DPN' ? '#b45309' : '#7c3aed',
-                                            }}>{p.category}</span>
-                                          </td>
-                                          <td>{p.uid || '—'}</td>
-                                          <td>{p.gender || '—'}</td>
-                                          <td>{p.id_type || '—'}</td>
-                                          <td>{p.id_number || '—'}</td>
-                                          <td>{p.booking_ref || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
-                                        </tr>
-                                      ))}
-                                    </tbody>
-                                  </table>
-                                </div>
-                              ) : (
-                                <div style={{ color: 'var(--muted)', fontSize: 13 }}>No passenger data available.</div>
-                              )}
-                            </td>
-                          </tr>
+                            )}
+                          </div>
                         )}
-                      </>
-                    );
-                  })}
-                </tbody>
-              </table>
+
+                        {/* Requestor notes */}
+                        {det.notes && (
+                          <div style={{ marginBottom: 14, fontSize: 13, color: 'var(--text)' }}>
+                            <strong>Notes:</strong> {det.notes}
+                          </div>
+                        )}
+
+                        {/* Passengers */}
+                        <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+                          Passengers ({det.passengers?.length || 0})
+                        </div>
+
+                        {det.passengers && det.passengers.length > 0 ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                            {det.passengers.map((p, pi) => (
+                              <div key={p.id} style={{
+                                background: '#fff', border: '1px solid var(--border)',
+                                borderRadius: 10, padding: '12px 14px',
+                              }}>
+                                {/* Passenger name + badge */}
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--navy)' }}>
+                                    {pi + 1}. {p.passenger_name}
+                                  </div>
+                                  <span style={{
+                                    padding: '2px 9px', borderRadius: 6, fontSize: 10, fontWeight: 700,
+                                    background: p.category === 'EMP' ? '#dbeafe' : p.category === 'DPN' ? '#fef3c7' : '#f3e8ff',
+                                    color: p.category === 'EMP' ? '#1d4ed8' : p.category === 'DPN' ? '#b45309' : '#7c3aed',
+                                  }}>{p.category}</span>
+                                </div>
+
+                                {/* Key-value rows */}
+                                {[
+                                  ['UID',         p.uid],
+                                  ['Gender',      p.gender],
+                                  ['ID Type',     p.id_type],
+                                  ['ID Number',   p.id_number],
+                                  ['Booking Ref', p.booking_ref],
+                                ].map(([label, val]) => val ? (
+                                  <div key={label} style={{
+                                    display: 'flex', justifyContent: 'space-between',
+                                    alignItems: 'center', paddingTop: 6,
+                                    borderTop: '1px solid #f1f5f9', fontSize: 12,
+                                  }}>
+                                    <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{label}</span>
+                                    <span style={{ color: 'var(--text)', fontWeight: 500, textAlign: 'right' }}>{val}</span>
+                                  </div>
+                                ) : null)}
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div style={{ color: 'var(--muted)', fontSize: 13 }}>No passenger data available.</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </>
