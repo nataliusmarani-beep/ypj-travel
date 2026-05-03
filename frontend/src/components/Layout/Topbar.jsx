@@ -552,13 +552,6 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                         </div>
 
                         <div className="form-group">
-                          <label className="form-label">Age <span style={{ color: 'var(--danger)' }}>*</span></label>
-                          <input className="form-input" type="number" min="0" max="120" value={editing.age || ''} {...fi('age', depErrors)}
-                            onChange={e => setEditing(d => ({ ...d, age: e.target.value ? parseInt(e.target.value) : '' }))} placeholder="Age" />
-                          {errTip('age', depErrors)}
-                        </div>
-
-                        <div className="form-group">
                           <label className="form-label">
                             Date of Birth
                             {(editing.prefix === 'Master' || editing.prefix === 'Miss') && (
@@ -566,7 +559,21 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                             )}
                           </label>
                           <input className="form-input" type="date" value={editing.date_of_birth || ''}
-                            onChange={e => setEditing(d => ({ ...d, date_of_birth: e.target.value }))} />
+                            onChange={e => {
+                              const dob = e.target.value;
+                              const age = dob
+                                ? Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+                                : '';
+                              setEditing(d => ({ ...d, date_of_birth: dob, age: age !== '' ? Math.max(0, age) : '' }));
+                            }} />
+                        </div>
+
+                        <div className="form-group">
+                          <label className="form-label">Age <span style={{ color: 'var(--danger)' }}>*</span></label>
+                          <input className="form-input" type="number" min="0" max="120" value={editing.age || ''} {...fi('age', depErrors)}
+                            onChange={e => setEditing(d => ({ ...d, age: e.target.value ? parseInt(e.target.value) : '' }))}
+                            placeholder="Auto-filled from date of birth" />
+                          {errTip('age', depErrors)}
                         </div>
 
                         <div className="form-group">
