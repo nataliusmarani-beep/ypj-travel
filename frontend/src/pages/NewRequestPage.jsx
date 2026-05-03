@@ -490,7 +490,7 @@ export default function NewRequestPage({ user }) {
 
           <div className="form-row">
             <div className="form-group">
-              <label className="form-label">Transport Type</label>
+              <label className="form-label">Transport Type <span style={{ color: '#dc2626' }}>*</span></label>
               <select className="form-select" style={selectSx} value={transport} onChange={e => setTransport(e.target.value)}>
                 <option value="Airplane">✈️ Airplane</option>
                 <option value="Bus">🚌 Bus</option>
@@ -498,7 +498,7 @@ export default function NewRequestPage({ user }) {
             </div>
             {transport === 'Airplane' && (
               <div className="form-group">
-                <label className="form-label">Airplane Type</label>
+                <label className="form-label">Airplane Type <span style={{ color: '#dc2626' }}>*</span></label>
                 <select className="form-select" style={selectSx} value={airplaneType} onChange={e => setAirplaneType(e.target.value)}>
                   <option value="Airfast Indonesia">Airfast Indonesia</option>
                   <option value="Commercial">Commercial</option>
@@ -527,7 +527,7 @@ export default function NewRequestPage({ user }) {
           {transport === 'Bus' ? (
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Bus Route</label>
+                <label className="form-label">Bus Route <span style={{ color: '#dc2626' }}>*</span></label>
                 <select className="form-select" style={selectSx} value={busOutRoute} onChange={e => setBusOutRoute(e.target.value)}>
                   <option value="">— Select Route —</option>
                   <option value="TPN-TIM">🚌 Tembagapura → Timika</option>
@@ -535,21 +535,21 @@ export default function NewRequestPage({ user }) {
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">Departure Date</label>
+                <label className="form-label">Departure Date <span style={{ color: '#dc2626' }}>*</span></label>
                 <input className="form-input" style={inputSx} type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
               </div>
             </div>
           ) : (
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">Type</label>
+                <label className="form-label">Type <span style={{ color: '#dc2626' }}>*</span></label>
                 <select className="form-select" style={selectSx} value={outType} onChange={e => setOutType(e.target.value)}>
                   <option value="DOM">Domestic (DOM)</option>
                   <option value="INT">International (INT)</option>
                 </select>
               </div>
               <div className="form-group">
-                <label className="form-label">From Airport</label>
+                <label className="form-label">From Airport <span style={{ color: '#dc2626' }}>*</span></label>
                 <select className="form-select" style={selectSx} value={outFrom} onChange={e => setOutFrom(e.target.value)}>
                   {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
@@ -558,7 +558,7 @@ export default function NewRequestPage({ user }) {
                 )}
               </div>
               <div className="form-group">
-                <label className="form-label">To Airport</label>
+                <label className="form-label">To Airport <span style={{ color: '#dc2626' }}>*</span></label>
                 <select className="form-select" style={selectSx} value={outTo} onChange={e => setOutTo(e.target.value)}>
                   {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
@@ -567,7 +567,7 @@ export default function NewRequestPage({ user }) {
                 )}
               </div>
               <div className="form-group">
-                <label className="form-label">Departure Date</label>
+                <label className="form-label">Departure Date <span style={{ color: '#dc2626' }}>*</span></label>
                 <input className="form-input" style={inputSx} type="date" value={outDate} onChange={e => setOutDate(e.target.value)} />
               </div>
             </div>
@@ -598,7 +598,7 @@ export default function NewRequestPage({ user }) {
               {transport === 'Bus' ? (
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Bus Route</label>
+                    <label className="form-label">Bus Route <span style={{ color: '#dc2626' }}>*</span></label>
                     <select className="form-select" style={selectSx} value={busInRoute} onChange={e => setBusInRoute(e.target.value)}>
                       <option value="">— Select Route —</option>
                       <option value="TPN-TIM">🚌 Tembagapura → Timika</option>
@@ -606,21 +606,21 @@ export default function NewRequestPage({ user }) {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Return Date</label>
+                    <label className="form-label">Return Date <span style={{ color: '#dc2626' }}>*</span></label>
                     <input className="form-input" style={inputSx} type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
                   </div>
                 </div>
               ) : (
                 <div className="form-row">
                   <div className="form-group">
-                    <label className="form-label">Type</label>
+                    <label className="form-label">Type <span style={{ color: '#dc2626' }}>*</span></label>
                     <select className="form-select" style={selectSx} value={inType} onChange={e => setInType(e.target.value)}>
                       <option value="DOM">Domestic (DOM)</option>
                       <option value="INT">International (INT)</option>
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">From Airport</label>
+                    <label className="form-label">From Airport <span style={{ color: '#dc2626' }}>*</span></label>
                     <select className="form-select" style={selectSx} value={inFrom} onChange={e => setInFrom(e.target.value)}>
                       {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                     </select>
@@ -629,7 +629,7 @@ export default function NewRequestPage({ user }) {
                     )}
                   </div>
                   <div className="form-group">
-                    <label className="form-label">To Airport</label>
+                    <label className="form-label">To Airport <span style={{ color: '#dc2626' }}>*</span></label>
                     <select className="form-select" style={selectSx} value={inTo} onChange={e => setInTo(e.target.value)}>
                       {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                     </select>
@@ -638,7 +638,7 @@ export default function NewRequestPage({ user }) {
                     )}
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Return Date</label>
+                    <label className="form-label">Return Date <span style={{ color: '#dc2626' }}>*</span></label>
                     <input className="form-input" style={inputSx} type="date" value={inDate} onChange={e => setInDate(e.target.value)} />
                   </div>
                 </div>
