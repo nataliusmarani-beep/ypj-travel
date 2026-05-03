@@ -2,7 +2,7 @@ const router   = require('express').Router();
 const bcrypt   = require('bcryptjs');
 const crypto   = require('crypto');
 const { pool } = require('../db');
-const { sendWelcomeEmail } = require('../mailer');
+const { sendWelcomeEmail, sendWelcomeEmailWithPassword } = require('../mailer');
 
 const isPIC     = r => r === 'Manager' || r === 'PIC Travel';
 const isManager = r => r === 'Manager';
@@ -100,20 +100,34 @@ router.delete('/me/dependents/:id', async (req, res) => {
 // POST /api/users
 router.post('/', async (req, res) => {
   if (!isManager(req.user.role)) return res.status(403).json({ error: 'Forbidden.' });
-  const { name, email, role, employee_id, unit } = req.body;
+  const { name, email, role, employee_id, unit, password,
+          date_of_hire, point_of_hire, date_of_service, tribe, employee_status, marriage_date } = req.body;
   if (!name || !email || !role) return res.status(400).json({ error: 'Name, email and role required.' });
+  if (password && password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
 
-  const token   = crypto.randomBytes(32).toString('hex');
-  const expires = new Date(Date.now() + 72 * 60 * 60 * 1000);
-  const hash    = bcrypt.hashSync('TEMP_' + crypto.randomBytes(8).toString('hex'), 10);
+  const hasPassword = password && password.trim().length >= 6;
+  const hash        = hasPassword
+    ? bcrypt.hashSync(password, 10)
+    : bcrypt.hashSync('TEMP_' + crypto.randomBytes(8).toString('hex'), 10);
+  const token   = hasPassword ? null : crypto.randomBytes(32).toString('hex');
+  const expires = hasPassword ? null : new Date(Date.now() + 72 * 60 * 60 * 1000);
 
   try {
     const { rows } = await pool.query(
-      `INSERT INTO users (name,email,role,employee_id,unit,password_hash,password_reset_token,password_reset_expires)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id,name,email,role,employee_id,unit,is_active`,
-      [name, email.toLowerCase().trim(), role, employee_id||null, unit||'All', hash, token, expires]
+      `INSERT INTO users
+         (name,email,role,employee_id,unit,password_hash,password_reset_token,password_reset_expires,
+          date_of_hire,point_of_hire,date_of_service,tribe,employee_status,marriage_date)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+       RETURNING id,name,email,role,employee_id,unit,is_active`,
+      [name, email.toLowerCase().trim(), role, employee_id||null, unit||'All', hash, token, expires,
+       date_of_hire||null, point_of_hire||null, date_of_service||null,
+       tribe||null, employee_status||null, marriage_date||null]
     );
-    await sendWelcomeEmail({ name, email, token });
+    if (hasPassword) {
+      await sendWelcomeEmailWithPassword({ name, email, password }).catch(() => {});
+    } else {
+      await sendWelcomeEmail({ name, email, token });
+    }
     res.status(201).json(rows[0]);
   } catch (e) {
     if (e.code === '23505') return res.status(409).json({ error: 'Email already exists.' });

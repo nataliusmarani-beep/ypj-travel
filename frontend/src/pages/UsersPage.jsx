@@ -10,6 +10,7 @@ const emptyForm = () => ({
   name: '', email: '', role: 'Staff', employee_id: '', unit: '',
   date_of_hire: '', point_of_hire: '', date_of_service: '',
   tribe: '', employee_status: '', marriage_date: '',
+  password: '', password_confirm: '',
 });
 
 function fmtDate(d) {
@@ -42,6 +43,7 @@ export default function UsersPage({ user }) {
   const [form, setForm]           = useState(emptyForm());
   const [saving, setSaving]       = useState(false);
   const [inviting, setInviting]   = useState(null);
+  const [showPass, setShowPass]   = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -86,6 +88,14 @@ export default function UsersPage({ user }) {
     if (!form.point_of_hire.trim()){ setError('Point of Hire is required.'); return; }
     if (!form.tribe)               { setError('Tribe is required.'); return; }
     if (!form.employee_status)     { setError('Status is required.'); return; }
+    if (!editId) {
+      if (!form.password.trim())         { setError('Password is required.'); return; }
+      if (form.password.length < 6)      { setError('Password must be at least 6 characters.'); return; }
+      if (form.password !== form.password_confirm) { setError('Passwords do not match.'); return; }
+    } else if (form.password.trim()) {
+      if (form.password.length < 6)      { setError('Password must be at least 6 characters.'); return; }
+      if (form.password !== form.password_confirm) { setError('Passwords do not match.'); return; }
+    }
     setSaving(true); setError('');
     try {
       if (editId) {
@@ -415,13 +425,59 @@ export default function UsersPage({ user }) {
                 </div>
               )}
 
+              {/* ── Password ── */}
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: 'var(--navy)', textTransform: 'uppercase',
+                letterSpacing: '0.08em', marginTop: 16, marginBottom: 12,
+                paddingTop: 14, borderTop: '1px solid var(--border)',
+              }}>
+                🔐 {editId ? 'Change Password' : 'Set Password'}
+              </div>
+              {editId && (
+                <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>
+                  Leave blank to keep the current password.
+                </div>
+              )}
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">
+                    Password {!editId && <span style={{ color: '#dc2626' }}>*</span>}
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      className="form-input" style={{ borderRadius: 10, paddingRight: 40 }}
+                      type={showPass ? 'text' : 'password'}
+                      value={form.password}
+                      onChange={e => setField('password', e.target.value)}
+                      placeholder="Min. 6 characters"
+                    />
+                    <button type="button" onClick={() => setShowPass(v => !v)} style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      background: 'none', border: 'none', cursor: 'pointer', fontSize: 16, color: 'var(--muted)',
+                    }}>{showPass ? '🙈' : '👁'}</button>
+                  </div>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    Confirm Password {!editId && <span style={{ color: '#dc2626' }}>*</span>}
+                  </label>
+                  <input
+                    className="form-input" style={{ borderRadius: 10 }}
+                    type={showPass ? 'text' : 'password'}
+                    value={form.password_confirm}
+                    onChange={e => setField('password_confirm', e.target.value)}
+                    placeholder="Repeat password"
+                  />
+                </div>
+              </div>
+
               {!editId && (
                 <div style={{
                   fontSize: 12, color: '#0d9488', background: '#f0fdfa',
                   borderRadius: 10, padding: '10px 14px', marginTop: 4,
                   border: '1px solid #99f6e4',
                 }}>
-                  📧 A welcome email with a password setup link will be sent to the user.
+                  📧 A welcome email with login credentials will be sent to the user.
                 </div>
               )}
             </div>

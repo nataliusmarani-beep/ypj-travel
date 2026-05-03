@@ -50,6 +50,33 @@ async function sendWelcomeEmail({ name, email, token }) {
   });
 }
 
+async function sendWelcomeEmailWithPassword({ name, email, password }) {
+  await transporter.sendMail({
+    from, to: email,
+    subject: `Welcome to ${APP_NAME} — Your Account is Ready`,
+    html: `<div style="${BASE_STYLE}"><div style="${CARD}">
+      <div style="${HEADER}">✈️ Welcome to ${APP_NAME}</div>
+      <p>Hi <strong>${name}</strong>,</p>
+      <p>Your account has been created by your Manager. Use the credentials below to sign in.</p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px">
+        <tr><td style="padding:8px 12px;background:#f8fafc;border-radius:6px;font-weight:600;width:140px">Login URL</td>
+            <td style="padding:8px 12px"><a href="${APP_URL}">${APP_URL}</a></td></tr>
+        <tr><td style="padding:8px 12px;font-weight:600">Email</td>
+            <td style="padding:8px 12px">${email}</td></tr>
+        <tr><td style="padding:8px 12px;background:#f8fafc;font-weight:600">Password</td>
+            <td style="padding:8px 12px;font-family:monospace;letter-spacing:1px">${password}</td></tr>
+      </table>
+      <p style="color:#dc2626;font-size:12px;">⚠️ Please change your password after first login via your profile settings.</p>
+      <hr style="border:none;border-top:1px solid #e2e8f0;margin:20px 0;">
+      <p style="font-size:12px;color:#6b7280;">
+        📱 <strong>Install as App:</strong><br>
+        Android: Chrome ⋮ menu → "Add to Home Screen"<br>
+        iPhone: Safari Share → "Add to Home Screen"
+      </p>
+    </div></div>`,
+  });
+}
+
 // ── New request notification to PIC Travel ────────────────────────────────
 async function sendRequestNotification(request, passengers) {
   const { rows: pics } = await require('./db').pool.query(
@@ -176,6 +203,7 @@ async function sendRTIDeadlineReminder({ event, user, daysLeft }) {
 
 module.exports = {
   sendWelcomeEmail,
+  sendWelcomeEmailWithPassword,
   sendRequestNotification,
   sendBookingNotification,
   sendRTIAnnouncement,
