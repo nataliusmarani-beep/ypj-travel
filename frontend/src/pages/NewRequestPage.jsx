@@ -235,7 +235,7 @@ export default function NewRequestPage({ user }) {
       _passport:     choice.passport,
       other_id_type: idType,
       id_number:     idNum || '',
-      dob:           (choice.prefix === 'Master' || choice.prefix === 'Miss') ? choice.dob : '',
+      dob:           choice.dob || '',
       email:         choice.email || p.email,
     }));
   };
@@ -875,11 +875,30 @@ export default function NewRequestPage({ user }) {
                     </div>
                   )}
 
-                  {/* Date of Birth — children (Master / Miss) only */}
-                  {isChild(p) && (
-                    <div className="form-group" style={{ marginBottom: 12 }}>
-                      <label className="form-label">Date of Birth <span style={{ color: '#ef4444' }}>*</span></label>
-                      <input className="form-input" style={inputSx} type="date" value={p.dob} onChange={e => updatePassenger(idx, 'dob', e.target.value)} />
+                  {/* Date of Birth + Age — shown for all profile passengers */}
+                  {p._profileKey && (
+                    <div className="form-row" style={{ marginBottom: 12 }}>
+                      <div className="form-group">
+                        <label className="form-label">
+                          Date of Birth {isChild(p) && <span style={{ color: '#ef4444' }}>*</span>}
+                        </label>
+                        {isChild(p) ? (
+                          <input className="form-input" style={inputSx} type="date" value={p.dob}
+                            onChange={e => updatePassenger(idx, 'dob', e.target.value)} />
+                        ) : (
+                          <ReadonlyField value={p.dob ? new Date(p.dob).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : ''} muted hint="From profile" />
+                        )}
+                      </div>
+                      <div className="form-group">
+                        <label className="form-label">Age</label>
+                        <input
+                          className="form-input" style={{ ...inputSx, background: '#f8fafc', cursor: 'not-allowed' }}
+                          type="number"
+                          value={p.dob ? Math.max(0, Math.floor((Date.now() - new Date(p.dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000))) : ''}
+                          readOnly
+                          placeholder="Auto-filled from DOB"
+                        />
+                      </div>
                     </div>
                   )}
 
