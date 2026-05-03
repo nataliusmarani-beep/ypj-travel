@@ -625,6 +625,10 @@ button { font-family: inherit; }
     padding-bottom: 24px;
   }
 
+  .app-footer {
+    margin-bottom: 70px; /* clear fixed bottom nav */
+  }
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
