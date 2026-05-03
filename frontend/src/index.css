@@ -128,6 +128,7 @@ button { font-family: inherit; }
 .logo-text { font-size: 15px; font-weight: 800; color: var(--navy); }
 .logo-sub  { font-size: 11px; color: var(--muted); }
 .topbar-userinfo-mobile { display: none; }
+.topbar-userinfo { display: block; text-align: right; }
 
 /* ── Page Content ── */
 .page-content {
@@ -600,8 +601,7 @@ button { font-family: inherit; }
 
 @media (max-width: 768px) {
   .topbar-left .logo-sub { display: block; font-size: 10px; }  /* show subtitle on mobile */
-  .switch-dropdown { display: none; }              /* hide Apps switch button */
-  .topbar-userinfo-mobile { display: block; text-align: right; }
+  .topbar-userinfo { text-align: right; }
 
   .sidebar {
     display: none;

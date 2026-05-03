@@ -73,11 +73,9 @@ function AvatarCircle({ src, initial, color, size = 36, fontSize = 15, style = {
 }
 
 export default function Topbar({ user, onLogout, onProfileUpdate }) {
-  const [switchOpen, setSwitchOpen]   = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeTab, setActiveTab]     = useState('profile');
-  const switchRef = useRef(null);
-  const fileRef   = useRef(null);
+  const fileRef = useRef(null);
 
   /* ── Profile fields ── */
   const [prof, setProf]       = useState({ name: '', employee_id: '', unit: 'PAUD', campus_location: '', telegram_chat_id: '', date_of_birth: '', gender: '', nik_number: '', passport_id: '' });
@@ -133,13 +131,6 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
     setDepsLoading(true);
     api.getDependents().then(setDeps).catch(() => {}).finally(() => setDepsLoading(false));
   };
-
-  /* Close switch dropdown on outside click */
-  useEffect(() => {
-    const h = e => { if (switchRef.current && !switchRef.current.contains(e.target)) setSwitchOpen(false); };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
 
   /* ── Avatar file pick ── */
   const handleFileChange = e => {
@@ -256,30 +247,12 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
         </div>
 
         <div className="topbar-right">
-          {user.role === 'Manager' && (
-            <div className="switch-dropdown" ref={switchRef}>
-              <button className="btn btn-ghost btn-sm" onClick={() => setSwitchOpen(o => !o)} title="Switch App">
-                🔀 Apps
-              </button>
-              {switchOpen && (
-                <div className="switch-menu">
-                  <a className="switch-menu-item" href="https://kkinventory.ypj.sch.id" target="_blank" rel="noopener noreferrer" onClick={() => setSwitchOpen(false)}>🏫 YPJ KK Inventory</a>
-                  <a className="switch-menu-item" href="https://tprainventory.ypj.sch.id" target="_blank" rel="noopener noreferrer" onClick={() => setSwitchOpen(false)}>🏔️ YPJ TPRA Inventory</a>
-                  <div className="switch-menu-item current">
-                    ✈️ YPJ Travel
-                    <span className="badge badge-blue" style={{ marginLeft: 'auto', fontSize: 10 }}>Here</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
           <div
             style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}
             onClick={() => setProfileOpen(true)}
             title="My Profile"
           >
-            <div className="topbar-userinfo-mobile">
+            <div className="topbar-userinfo">
               <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--navy)', lineHeight: 1.2 }}>
                 {(user.name || user.email || '').split(' ')[0]}
               </div>
