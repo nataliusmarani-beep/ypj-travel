@@ -248,10 +248,10 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
     <>
       <div className="topbar">
         <div className="topbar-left">
-          <span className="logo-icon">✈️</span>
+          <img src="/icon-192.png" alt="YPJ Travel" className="logo-icon-img" />
           <div>
             <div className="logo-text">YPJ Travel</div>
-            <div className="logo-sub">School Travel System</div>
+            <div className="logo-sub">School Travel Management</div>
           </div>
         </div>
 

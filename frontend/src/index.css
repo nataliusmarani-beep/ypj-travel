@@ -124,6 +124,7 @@ button { font-family: inherit; }
 }
 
 .logo-icon { font-size: 24px; }
+.logo-icon-img { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
 .logo-text { font-size: 15px; font-weight: 800; color: var(--navy); }
 .logo-sub  { font-size: 11px; color: var(--muted); }
 .topbar-userinfo-mobile { display: none; }
@@ -591,7 +592,7 @@ button { font-family: inherit; }
 }
 
 @media (max-width: 768px) {
-  .topbar-left .logo-sub { display: none; }       /* hide subtitle, keep title */
+  .topbar-left .logo-sub { display: block; font-size: 10px; }  /* show subtitle on mobile */
   .switch-dropdown { display: none; }              /* hide Apps switch button */
   .topbar-userinfo-mobile { display: block; text-align: right; }
 
