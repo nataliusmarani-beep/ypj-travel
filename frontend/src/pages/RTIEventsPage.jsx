@@ -144,7 +144,7 @@ export default function RTIEventsPage({ user }) {
           <div style={{ fontSize: 11, color: 'rgba(255,255,255,.6)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 4 }}>
             📅 Routine Travel Itinerary (RTI)
           </div>
-          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>RTI Events</div>
+          <div style={{ fontSize: 20, fontWeight: 800, color: '#fff' }}>Group Travel</div>
           <div style={{ fontSize: 13, color: 'rgba(255,255,255,.7)', marginTop: 2 }}>Open travel registration events for staff</div>
         </div>
         {openEvents.length > 0 && (

@@ -100,7 +100,7 @@ export default function MobileNav({ user, onLogout }) {
           {({ isActive }) => (
             <>
               <span>📅</span>
-              <span style={tabLabel(isActive)}>RTI</span>
+              <span style={tabLabel(isActive)}>Group</span>
             </>
           )}
         </NavLink>

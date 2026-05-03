@@ -261,7 +261,7 @@ export default function DashboardPage({ user }) {
             boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
           }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 20 }}>📅</span> Open RTI Events
+              <span style={{ fontSize: 20 }}>📅</span> Open Group Travel
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {rtis.map(rti => {

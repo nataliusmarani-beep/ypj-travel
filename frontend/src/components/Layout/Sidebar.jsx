@@ -47,7 +47,7 @@ export default function Sidebar({ user }) {
         to="/rti"
         className={({ isActive }) => 'sidebar-item' + (isActive ? ' active' : '')}
       >
-        📅 RTI Events
+        📅 Group Travel
       </NavLink>
       <NavLink
         to="/flights"
