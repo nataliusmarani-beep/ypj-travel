@@ -73,17 +73,17 @@ export default function App() {
             )}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <footer className="app-footer">
+            <span className="footer-copy">© {new Date().getFullYear()} Yayasan Pendidikan Jayawijaya. All rights reserved.</span>
+            <span className="footer-links">
+              📧{' '}
+              <a href="mailto:nmarani@fmi.com">nmarani@fmi.com</a>
+              {' · '}
+              🌐{' '}
+              <a href="https://ypj.sch.id" target="_blank" rel="noreferrer">ypj.sch.id</a>
+            </span>
+          </footer>
         </div>
-        <footer className="app-footer">
-          <span className="footer-copy">© {new Date().getFullYear()} Yayasan Pendidikan Jayawijaya. All rights reserved.</span>
-          <span className="footer-links">
-            📧{' '}
-            <a href="mailto:nmarani@fmi.com">nmarani@fmi.com</a>
-            {' · '}
-            🌐{' '}
-            <a href="https://ypj.sch.id" target="_blank" rel="noreferrer">ypj.sch.id</a>
-          </span>
-        </footer>
       </div>
       <MobileNav user={user} onLogout={handleLogout} />
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
