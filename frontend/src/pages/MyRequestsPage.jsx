@@ -205,13 +205,13 @@ export default function MyRequestsPage({ user }) {
                           }}>
                             <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>📋 PIC Notes</div>
                             <div style={{ fontSize: 13, color: '#78350f' }}>{det.pic_notes}</div>
-                            {det.pic_action_by && (
-                              <div style={{ marginTop: 6, fontSize: 11, color: '#a16207', display: 'flex', alignItems: 'center', gap: 5 }}>
-                                <span>👤</span>
-                                <strong>{det.pic_action_by}</strong>
-                                {det.pic_action_at && <span style={{ color: '#ca8a04' }}>· {fmtDate(det.pic_action_at)}</span>}
-                              </div>
-                            )}
+                            <div style={{ marginTop: 8, fontSize: 11, color: '#a16207', display: 'flex', alignItems: 'center', gap: 5 }}>
+                              <span>👤</span>
+                              <span style={{ fontWeight: 400, color: '#b45309' }}>
+                                {det.pic_action_by || 'PIC Travel'}
+                                {det.pic_action_at && <span style={{ color: '#ca8a04', fontWeight: 400 }}> · {fmtDate(det.pic_action_at)}</span>}
+                              </span>
+                            </div>
                           </div>
                         )}
 
