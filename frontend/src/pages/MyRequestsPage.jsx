@@ -214,7 +214,9 @@ export default function MyRequestsPage({ user }) {
                               <span>👤</span>
                               <span style={{ fontWeight: 400, color: '#b45309' }}>
                                 {det.pic_action_by || 'PIC Travel'}
-                                {det.pic_action_at && <span style={{ color: '#ca8a04', fontWeight: 400 }}> · {fmtDateTime(det.pic_action_at)}</span>}
+                                <span style={{ color: '#ca8a04', fontWeight: 400 }}>
+                                  {' · '}{fmtDateTime(det.pic_action_at || det.updated_at)}
+                                </span>
                               </span>
                             </div>
                           </div>
