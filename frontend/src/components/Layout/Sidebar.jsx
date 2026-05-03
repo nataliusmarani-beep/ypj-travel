@@ -17,7 +17,7 @@ export default function Sidebar({ user }) {
     <nav className="sidebar">
       {/* Logo */}
       <div className="sidebar-logo">
-        <div style={{ fontSize: 24, marginBottom: 6 }}>✈️</div>
+        <img src="/icon-192.png" alt="YPJ Travel" style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', marginBottom: 8 }} />
         <div className="sidebar-logo-text">YPJ Travel</div>
         <div className="sidebar-logo-sub">School Travel System</div>
       </div>

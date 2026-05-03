@@ -75,7 +75,14 @@ export default function App() {
           </Routes>
         </div>
         <footer className="app-footer">
-          YPJ Travel © {new Date().getFullYear()} &nbsp;·&nbsp; <a href="mailto:nmarani@fmi.com" style={{color:'var(--muted)'}}>nmarani@fmi.com</a>
+          <span className="footer-copy">© {new Date().getFullYear()} Yayasan Pendidikan Jayawijaya. All rights reserved.</span>
+          <span className="footer-links">
+            📧{' '}
+            <a href="mailto:nmarani@fmi.com">nmarani@fmi.com</a>
+            {' · '}
+            🌐{' '}
+            <a href="https://ypj.sch.id" target="_blank" rel="noreferrer">ypj.sch.id</a>
+          </span>
         </footer>
       </div>
       <MobileNav user={user} onLogout={handleLogout} />
