@@ -153,18 +153,18 @@ export default function NewRequestPage({ user }) {
   const [purpose, setPurpose]         = useState('');
   const [payment, setPayment]         = useState('');
   const [outType, setOutType]         = useState('DOM');
-  const [outFrom, setOutFrom]         = useState('TIM');
+  const [outFrom, setOutFrom]         = useState('');
   const [outFromOther, setOutFromOther] = useState('');
-  const [outTo, setOutTo]             = useState('CGK');
+  const [outTo, setOutTo]             = useState('');
   const [outToOther, setOutToOther]   = useState('');
   const [outDate, setOutDate]         = useState('');
   const [busOutRoute, setBusOutRoute] = useState('');
   const [busInRoute, setBusInRoute]   = useState('');
   const [hasReturn, setHasReturn]     = useState(false);
   const [inType, setInType]           = useState('DOM');
-  const [inFrom, setInFrom]           = useState('CGK');
+  const [inFrom, setInFrom]           = useState('');
   const [inFromOther, setInFromOther] = useState('');
-  const [inTo, setInTo]               = useState('TIM');
+  const [inTo, setInTo]               = useState('');
   const [inToOther, setInToOther]     = useState('');
   const [inDate, setInDate]           = useState('');
   const [notes, setNotes]             = useState('');
@@ -262,12 +262,15 @@ export default function NewRequestPage({ user }) {
       }
     } else {
       if (!payment) return 'Please select a Payment Method.';
-      if (!outFrom || !outTo)          return 'Please fill in outbound airports.';
+      if (!outFrom)                    return 'Please select a departure airport.';
+      if (!outTo)                      return 'Please select a destination airport.';
       if (outFrom === 'Other' && !outFromOther.trim()) return 'Please specify the departure airport.';
       if (outTo   === 'Other' && !outToOther.trim())   return 'Please specify the destination airport.';
       if (!outDate)                    return 'Please select an outbound travel date.';
       if (hasReturn) {
-        if (!inDate) return 'Please select a return date.';
+        if (!inDate)  return 'Please select a return date.';
+        if (!inFrom)  return 'Please select a return departure airport.';
+        if (!inTo)    return 'Please select a return destination airport.';
         if (inFrom === 'Other' && !inFromOther.trim()) return 'Please specify the return departure airport.';
         if (inTo   === 'Other' && !inToOther.trim())   return 'Please specify the return destination airport.';
       }
@@ -550,7 +553,8 @@ export default function NewRequestPage({ user }) {
               </div>
               <div className="form-group">
                 <label className="form-label">From Airport <span style={{ color: '#dc2626' }}>*</span></label>
-                <select className="form-select" style={selectSx} value={outFrom} onChange={e => setOutFrom(e.target.value)}>
+                <select className="form-select" style={{ ...selectSx, color: outFrom ? 'inherit' : 'var(--muted)' }} value={outFrom} onChange={e => setOutFrom(e.target.value)}>
+                  <option value="" disabled>— Select Airport —</option>
                   {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
                 {outFrom === 'Other' && (
@@ -559,7 +563,8 @@ export default function NewRequestPage({ user }) {
               </div>
               <div className="form-group">
                 <label className="form-label">To Airport <span style={{ color: '#dc2626' }}>*</span></label>
-                <select className="form-select" style={selectSx} value={outTo} onChange={e => setOutTo(e.target.value)}>
+                <select className="form-select" style={{ ...selectSx, color: outTo ? 'inherit' : 'var(--muted)' }} value={outTo} onChange={e => setOutTo(e.target.value)}>
+                  <option value="" disabled>— Select Airport —</option>
                   {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                 </select>
                 {outTo === 'Other' && (
@@ -621,7 +626,8 @@ export default function NewRequestPage({ user }) {
                   </div>
                   <div className="form-group">
                     <label className="form-label">From Airport <span style={{ color: '#dc2626' }}>*</span></label>
-                    <select className="form-select" style={selectSx} value={inFrom} onChange={e => setInFrom(e.target.value)}>
+                    <select className="form-select" style={{ ...selectSx, color: inFrom ? 'inherit' : 'var(--muted)' }} value={inFrom} onChange={e => setInFrom(e.target.value)}>
+                      <option value="" disabled>— Select Airport —</option>
                       {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                     </select>
                     {inFrom === 'Other' && (
@@ -630,7 +636,8 @@ export default function NewRequestPage({ user }) {
                   </div>
                   <div className="form-group">
                     <label className="form-label">To Airport <span style={{ color: '#dc2626' }}>*</span></label>
-                    <select className="form-select" style={selectSx} value={inTo} onChange={e => setInTo(e.target.value)}>
+                    <select className="form-select" style={{ ...selectSx, color: inTo ? 'inherit' : 'var(--muted)' }} value={inTo} onChange={e => setInTo(e.target.value)}>
+                      <option value="" disabled>— Select Airport —</option>
                       {AIRPORTS.map(a => <option key={a} value={a}>{a}</option>)}
                     </select>
                     {inTo === 'Other' && (
