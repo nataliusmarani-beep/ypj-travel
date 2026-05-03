@@ -405,7 +405,25 @@ export default function Topbar({ user, onLogout, onProfileUpdate }) {
                     <div className="form-group">
                       <label className="form-label">Date of Birth</label>
                       <input className="form-input" type="date" value={prof.date_of_birth}
-                        onChange={e => setProf(p => ({ ...p, date_of_birth: e.target.value }))} />
+                        onChange={e => {
+                          const dob = e.target.value;
+                          const age = dob
+                            ? Math.max(0, Math.floor((Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)))
+                            : '';
+                          setProf(p => ({ ...p, date_of_birth: dob, _age: age }));
+                        }} />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Age</label>
+                      <input
+                        className="form-input"
+                        type="number"
+                        value={prof._age !== undefined ? prof._age : (prof.date_of_birth ? Math.max(0, Math.floor((Date.now() - new Date(prof.date_of_birth).getTime()) / (365.25 * 24 * 60 * 60 * 1000))) : '')}
+                        readOnly
+                        placeholder="Auto-filled from date of birth"
+                        style={{ background: '#f8fafc', cursor: 'not-allowed', color: 'var(--muted)' }}
+                      />
                     </div>
 
                     <div className="form-group">
