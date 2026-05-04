@@ -2,7 +2,7 @@ const FLOW_STEPS = [
   { key: 'submitted',        label: 'Submitted' },
   { key: 'processing',       label: 'Processing' },
   { key: 'booked',           label: 'Booked' },
-  { key: 'awaiting_payment', label: 'Awaiting Payment' },
+  { key: 'awaiting_payment', label: 'Payment' },
   { key: 'confirmed',        label: 'Confirmed' },
 ];
 

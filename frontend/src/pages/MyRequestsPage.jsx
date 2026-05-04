@@ -16,7 +16,7 @@ const STATUS_MAP = {
   submitted:        { color: '#2563eb', bg: '#dbeafe', label: 'Submitted' },
   processing:       { color: '#d97706', bg: '#fef3c7', label: 'Processing' },
   booked:           { color: '#0d9488', bg: '#ccfbf1', label: 'Booked' },
-  awaiting_payment: { color: '#ea580c', bg: '#ffedd5', label: 'Awaiting Payment' },
+  awaiting_payment: { color: '#ea580c', bg: '#ffedd5', label: 'Payment' },
   confirmed:        { color: '#16a34a', bg: '#dcfce7', label: 'Confirmed' },
   cancelled:        { color: '#dc2626', bg: '#fee2e2', label: 'Cancelled' },
 };
