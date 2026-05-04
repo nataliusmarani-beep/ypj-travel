@@ -431,10 +431,6 @@ export default function AllRequestsPage({ user }) {
                 <label className="form-label">Booking Reference</label>
                 <input className="form-input" style={{ borderRadius: 10 }} value={paxBooking} onChange={e => setPaxBooking(e.target.value)} placeholder="e.g. ABC123" />
               </div>
-              <div className="form-group">
-                <label className="form-label">Seat Number</label>
-                <input className="form-input" style={{ borderRadius: 10 }} value={paxSeat} onChange={e => setPaxSeat(e.target.value)} placeholder="e.g. 12A" />
-              </div>
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" style={{ borderRadius: 10 }} onClick={() => setPaxModal(null)}>Cancel</button>
