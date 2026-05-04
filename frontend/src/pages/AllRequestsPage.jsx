@@ -205,41 +205,41 @@ export default function AllRequestsPage({ user }) {
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
           🔍 Filters
         </div>
-        <div className="filter-bar" style={{ flexWrap: 'wrap' }}>
-          <div className="form-group">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
+          <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Status</label>
-            <select className="form-select" value={fStatus} onChange={e => setFStatus(e.target.value)} style={{ width: 160, borderRadius: 8 }}>
+            <select className="form-select" value={fStatus} onChange={e => setFStatus(e.target.value)} style={{ width: '100%', borderRadius: 8 }}>
               <option value="">All</option>
               {Object.entries(STATUS_MAP).map(([v,{label}]) => <option key={v} value={v}>{label}</option>)}
             </select>
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Purpose</label>
-            <select className="form-select" value={fPurpose} onChange={e => setFPurpose(e.target.value)} style={{ width: 130, borderRadius: 8 }}>
+            <select className="form-select" value={fPurpose} onChange={e => setFPurpose(e.target.value)} style={{ width: '100%', borderRadius: 8 }}>
               <option value="">All</option>
               {PURPOSE_OPTIONS.map(p => <option key={p} value={p}>{p}</option>)}
             </select>
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Transport</label>
-            <select className="form-select" value={fTransport} onChange={e => setFTransport(e.target.value)} style={{ width: 120, borderRadius: 8 }}>
+            <select className="form-select" value={fTransport} onChange={e => setFTransport(e.target.value)} style={{ width: '100%', borderRadius: 8 }}>
               <option value="">All</option>
               <option value="plane">Plane</option>
               <option value="bus">Bus</option>
               <option value="both">Both</option>
             </select>
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Date From</label>
-            <input className="form-input" type="date" value={fDateFrom} onChange={e => setFDateFrom(e.target.value)} style={{ width: 140, borderRadius: 8 }} />
+            <input className="form-input" type="date" value={fDateFrom} onChange={e => setFDateFrom(e.target.value)} style={{ width: '100%', borderRadius: 8 }} />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Date To</label>
-            <input className="form-input" type="date" value={fDateTo} onChange={e => setFDateTo(e.target.value)} style={{ width: 140, borderRadius: 8 }} />
+            <input className="form-input" type="date" value={fDateTo} onChange={e => setFDateTo(e.target.value)} style={{ width: '100%', borderRadius: 8 }} />
           </div>
-          <div className="form-group">
+          <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Search</label>
-            <input className="form-input" placeholder="Name, route…" value={fSearch} onChange={e => setFSearch(e.target.value)} style={{ width: 160, borderRadius: 8 }} />
+            <input className="form-input" placeholder="Name, route…" value={fSearch} onChange={e => setFSearch(e.target.value)} style={{ width: '100%', borderRadius: 8 }} />
           </div>
         </div>
       </div>
