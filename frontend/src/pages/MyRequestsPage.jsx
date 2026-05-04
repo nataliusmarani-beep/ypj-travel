@@ -62,50 +62,50 @@ function StatusTracker({ status }) {
 
   return (
     <div style={{ padding: '14px 0 10px', overflowX: 'auto' }}>
-      {/* Labels row — each label is flex:1 so they space equally */}
-      <div style={{ display: 'flex', marginBottom: 6, minWidth: 300 }}>
+      {/* Single row: each step is flex:1, label centered above dot, lines on each side */}
+      <div style={{ display: 'flex', alignItems: 'flex-end', minWidth: 300 }}>
         {FLOW_STEPS.map((step, i) => {
-          const future = i > currentIdx;
-          return (
-            <div key={step.key} style={{
-              flex: 1, textAlign: 'center',
-              fontSize: 10, fontWeight: 700, lineHeight: 1.3,
-              color: future ? '#9ca3af' : '#111827',
-            }}>
-              {step.label}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Dots + lines row */}
-      <div style={{ display: 'flex', alignItems: 'center', minWidth: 300 }}>
-        {FLOW_STEPS.map((step, i) => {
-          const done   = i < currentIdx;
-          const active = i === currentIdx;
-          const isLast = i === FLOW_STEPS.length - 1;
-          const dotColor = (done || active) ? '#22c55e' : '#d1d5db';
+          const done    = i < currentIdx;
+          const active  = i === currentIdx;
+          const future  = i > currentIdx;
+          const isFirst = i === 0;
+          const isLast  = i === FLOW_STEPS.length - 1;
+          const dotColor       = (done || active) ? '#22c55e' : '#d1d5db';
+          const leftLineColor  = done || active ? '#22c55e' : '#d1d5db';
           const rightLineColor = done ? '#22c55e' : '#d1d5db';
 
           return (
-            <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              {/* Dot */}
+            <div key={step.key} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              {/* Label */}
               <div style={{
-                width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                background: dotColor,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: active ? '0 0 0 4px rgba(34,197,94,.25)' : 'none',
+                fontSize: 10, fontWeight: 700, lineHeight: 1.3, textAlign: 'center',
+                color: future ? '#9ca3af' : '#111827', marginBottom: 6,
               }}>
-                {(done || active) && (
-                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                    <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                )}
+                {step.label}
               </div>
-              {/* Connector line — takes up remaining space in the flex cell */}
-              {!isLast && (
-                <div style={{ flex: 1, height: 3, background: rightLineColor }} />
-              )}
+
+              {/* Line + dot + line in one row */}
+              <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+                {/* Left half-line */}
+                <div style={{ flex: 1, height: 3, background: isFirst ? 'transparent' : leftLineColor }} />
+
+                {/* Dot */}
+                <div style={{
+                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                  background: dotColor,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: active ? '0 0 0 4px rgba(34,197,94,.25)' : 'none',
+                }}>
+                  {(done || active) && (
+                    <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                      <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+
+                {/* Right half-line */}
+                <div style={{ flex: 1, height: 3, background: isLast ? 'transparent' : rightLineColor }} />
+              </div>
             </div>
           );
         })}
