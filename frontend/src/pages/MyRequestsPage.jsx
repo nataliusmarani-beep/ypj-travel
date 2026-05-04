@@ -217,26 +217,6 @@ export default function MyRequestsPage({ user }) {
                     {isOpen && det && (
                       <div style={{ borderTop: '1px solid var(--border)', background: '#f8fafc', padding: '16px 18px' }}>
 
-                        {/* Full PIC Notes with actioner */}
-                        {det.pic_notes && (
-                          <div style={{
-                            background: '#fffbeb', border: '1px solid #fde68a',
-                            borderRadius: 10, padding: '10px 14px', marginBottom: 14,
-                          }}>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: '#92400e', marginBottom: 4 }}>📋 PIC Notes</div>
-                            <div style={{ fontSize: 13, color: '#78350f' }}>{det.pic_notes}</div>
-                            <div style={{ marginTop: 8, fontSize: 11, color: '#a16207', display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <span>👤</span>
-                              <span style={{ fontWeight: 400, color: '#b45309' }}>
-                                {det.pic_action_by || 'PIC Travel'}
-                                <span style={{ color: '#ca8a04', fontWeight: 400 }}>
-                                  {' · '}{fmtDateTime(det.pic_action_at || det.updated_at)}
-                                </span>
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
                         {/* Requestor notes */}
                         {det.notes && (
                           <div style={{ marginBottom: 14, fontSize: 13, color: 'var(--text)' }}>
@@ -250,43 +230,40 @@ export default function MyRequestsPage({ user }) {
                         </div>
 
                         {det.passengers && det.passengers.length > 0 ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                            {det.passengers.map((p, pi) => (
-                              <div key={p.id} style={{
-                                background: '#fff', border: '1px solid var(--border)',
-                                borderRadius: 10, padding: '12px 14px',
-                              }}>
-                                {/* Passenger name + badge */}
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                                  <div style={{ fontWeight: 700, fontSize: 14, color: 'var(--navy)' }}>
-                                    {pi + 1}. {p.passenger_name}
-                                  </div>
-                                  <span style={{
-                                    padding: '2px 9px', borderRadius: 6, fontSize: 10, fontWeight: 700,
-                                    background: p.category === 'EMP' ? '#dbeafe' : p.category === 'DPN' ? '#fef3c7' : '#f3e8ff',
-                                    color: p.category === 'EMP' ? '#1d4ed8' : p.category === 'DPN' ? '#b45309' : '#7c3aed',
-                                  }}>{p.category}</span>
-                                </div>
-
-                                {/* Key-value rows */}
-                                {[
-                                  ['UID',         p.uid],
-                                  ['Gender',      p.gender],
-                                  ['ID Type',     p.id_type],
-                                  ['ID Number',   p.id_number],
-                                  ['Booking Ref', p.booking_ref],
-                                ].map(([label, val]) => val ? (
-                                  <div key={label} style={{
-                                    display: 'flex', justifyContent: 'space-between',
-                                    alignItems: 'center', paddingTop: 6,
-                                    borderTop: '1px solid #f1f5f9', fontSize: 12,
-                                  }}>
-                                    <span style={{ color: 'var(--muted)', fontWeight: 600 }}>{label}</span>
-                                    <span style={{ color: 'var(--text)', fontWeight: 500, textAlign: 'right' }}>{val}</span>
-                                  </div>
-                                ) : null)}
-                              </div>
-                            ))}
+                          <div style={{ overflowX: 'auto', borderRadius: 10, border: '1px solid var(--border)' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12, minWidth: 420 }}>
+                              <thead>
+                                <tr style={{ background: '#f1f5f9' }}>
+                                  {['#', 'Name', 'Cat', 'UID', 'Gender', 'ID Type', 'ID Number', 'Booking Ref'].map(h => (
+                                    <th key={h} style={{
+                                      padding: '8px 10px', textAlign: 'left', fontWeight: 700,
+                                      color: 'var(--muted)', fontSize: 11, whiteSpace: 'nowrap',
+                                      borderBottom: '1px solid var(--border)',
+                                    }}>{h}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {det.passengers.map((p, pi) => (
+                                  <tr key={p.id} style={{ borderBottom: '1px solid #f1f5f9', background: pi % 2 === 0 ? '#fff' : '#f8fafc' }}>
+                                    <td style={{ padding: '8px 10px', color: 'var(--muted)', fontWeight: 600 }}>{pi + 1}</td>
+                                    <td style={{ padding: '8px 10px', fontWeight: 700, color: 'var(--navy)', whiteSpace: 'nowrap' }}>{p.passenger_name}</td>
+                                    <td style={{ padding: '8px 10px' }}>
+                                      <span style={{
+                                        padding: '2px 7px', borderRadius: 5, fontSize: 10, fontWeight: 700,
+                                        background: p.category === 'EMP' ? '#dbeafe' : p.category === 'DPN' ? '#fef3c7' : '#f3e8ff',
+                                        color: p.category === 'EMP' ? '#1d4ed8' : p.category === 'DPN' ? '#b45309' : '#7c3aed',
+                                      }}>{p.category}</span>
+                                    </td>
+                                    <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{p.uid || '—'}</td>
+                                    <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{p.gender || '—'}</td>
+                                    <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{p.id_type || '—'}</td>
+                                    <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{p.id_number || '—'}</td>
+                                    <td style={{ padding: '8px 10px', color: 'var(--text)' }}>{p.booking_ref || '—'}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
                         ) : (
                           <div style={{ color: 'var(--muted)', fontSize: 13 }}>No passenger data available.</div>
