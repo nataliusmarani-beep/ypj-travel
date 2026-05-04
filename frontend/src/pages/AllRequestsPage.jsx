@@ -467,7 +467,7 @@ export default function AllRequestsPage({ user }) {
 
               {/* Booking Attachment */}
               <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Booking Attachment <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(PDF, image)</span></label>
+                <label className="form-label">Booking Attachment <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(PDF, image, .msg, .eml)</span></label>
                 <label style={{
                   display: 'flex', alignItems: 'center', gap: 10,
                   border: '1.5px dashed var(--border)', borderRadius: 10,
@@ -476,7 +476,7 @@ export default function AllRequestsPage({ user }) {
                 }}>
                   <span style={{ fontSize: 18 }}>📎</span>
                   <span>{paxFile ? paxFile.name : (paxModal.request?.booking_attachment_name || 'Click to attach file…')}</span>
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }}
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png,.msg,.eml" style={{ display: 'none' }}
                     onChange={e => setPaxFile(e.target.files[0] || null)} />
                 </label>
                 {paxModal.request?.booking_attachment_name && !paxFile && (
