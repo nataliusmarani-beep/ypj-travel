@@ -50,7 +50,7 @@ function StatusTracker({ status }) {
       <div style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '10px 14px', background: '#fef2f2',
-        borderRadius: 10, border: '1px solid #fecaca',
+        borderRadius: 10, border: '1px solid #fecaca', margin: '12px 0',
       }}>
         <span style={{ fontSize: 16 }}>✕</span>
         <span style={{ fontSize: 12, fontWeight: 700, color: '#dc2626' }}>This request has been cancelled</span>
@@ -61,60 +61,58 @@ function StatusTracker({ status }) {
   const currentIdx = FLOW_STEPS.findIndex(s => s.key === status);
 
   return (
-    <div style={{ padding: '12px 4px 4px', overflowX: 'auto' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', minWidth: 320, position: 'relative' }}>
+    <div style={{ padding: '14px 0 10px', overflowX: 'auto' }}>
+      {/* Labels row — each label is flex:1 so they space equally */}
+      <div style={{ display: 'flex', marginBottom: 6, minWidth: 300 }}>
         {FLOW_STEPS.map((step, i) => {
-          const done    = i < currentIdx;
-          const active  = i === currentIdx;
-          const future  = i > currentIdx;
-          const isLast  = i === FLOW_STEPS.length - 1;
+          const future = i > currentIdx;
+          return (
+            <div key={step.key} style={{
+              flex: 1, textAlign: 'center',
+              fontSize: 10, fontWeight: 700, lineHeight: 1.3,
+              color: future ? '#9ca3af' : '#111827',
+            }}>
+              {step.label}
+            </div>
+          );
+        })}
+      </div>
 
-          const dotColor  = (done || active) ? '#22c55e' : '#d1d5db';
-          const lineColor = done ? '#22c55e' : '#d1d5db';
+      {/* Dots + lines row */}
+      <div style={{ display: 'flex', alignItems: 'center', minWidth: 300 }}>
+        {FLOW_STEPS.map((step, i) => {
+          const done   = i < currentIdx;
+          const active = i === currentIdx;
+          const isLast = i === FLOW_STEPS.length - 1;
+          const dotColor = (done || active) ? '#22c55e' : '#d1d5db';
+          const rightLineColor = done ? '#22c55e' : '#d1d5db';
 
           return (
-            <div key={step.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: isLast ? '0 0 auto' : 1 }}>
-              {/* Label */}
+            <div key={step.key} style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+              {/* Dot */}
               <div style={{
-                fontSize: 10, fontWeight: 700, color: future ? '#9ca3af' : '#111827',
-                marginBottom: 6, textAlign: 'center', whiteSpace: 'pre-line',
-                lineHeight: 1.2, minWidth: 54,
-              }}>{step.label}</div>
-
-              {/* Dot + connector line */}
-              <div style={{ display: 'flex', alignItems: 'center', width: '100%' }}>
-                {/* Left line */}
-                {i > 0 && (
-                  <div style={{
-                    flex: 1, height: 3, borderRadius: 2,
-                    background: done ? '#22c55e' : i === currentIdx ? `linear-gradient(to right, #22c55e 50%, #d1d5db 50%)` : '#d1d5db',
-                  }} />
-                )}
-
-                {/* Dot */}
-                <div style={{
-                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                  background: dotColor,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  boxShadow: active ? `0 0 0 4px rgba(34,197,94,.2)` : 'none',
-                  transition: 'all .2s',
-                }}>
-                  {(done || active) && (
-                    <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
-                      <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  )}
-                </div>
-
-                {/* Right line */}
-                {!isLast && (
-                  <div style={{
-                    flex: 1, height: 3, borderRadius: 2,
-                    background: done ? '#22c55e' : '#d1d5db',
-                  }} />
+                width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                background: dotColor,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: active ? '0 0 0 4px rgba(34,197,94,.25)' : 'none',
+              }}>
+                {(done || active) && (
+                  <svg width="11" height="9" viewBox="0 0 11 9" fill="none">
+                    <path d="M1 4.5L4 7.5L10 1.5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
                 )}
               </div>
+              {/* Connector line — takes up remaining space in the flex cell */}
+              {!isLast && (
+                <div style={{ flex: 1, height: 3, background: rightLineColor }} />
+              )}
             </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
           );
         })}
       </div>
