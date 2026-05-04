@@ -6,6 +6,11 @@ function fmtDate(d) {
   return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+function fmtDateTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 const STATUS_MAP = {
   submitted:        { color: '#2563eb', bg: '#dbeafe', label: 'Submitted' },
   processing:       { color: '#d97706', bg: '#fef3c7', label: 'Processing' },
@@ -280,8 +285,8 @@ export default function AllRequestsPage({ user }) {
                 return (
                   <>
                     <tr key={r.id}>
-                      <td style={{ color: 'var(--muted)', fontWeight: 600, width: 40 }}>{idx + 1}</td>
-                      <td style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{fmtDate(r.created_at)}</td>
+                      <td style={{ color: 'var(--muted)', fontWeight: 700, width: 40, fontSize: 12 }}>#{r.id}</td>
+                      <td style={{ fontSize: 12, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{fmtDateTime(r.submitted_at)}</td>
                       <td style={{ fontWeight: 600 }}>{r.submitter_name || r.user_name || '—'}</td>
                       <td>
                         <div style={{ fontWeight: 600, fontSize: 13 }}>{r.outbound_from} → {r.outbound_to}</div>
