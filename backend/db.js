@@ -185,6 +185,11 @@ async function initDB() {
       );
     `);
 
+    // Booking details on request
+    await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS payment_deadline        TIMESTAMPTZ;`);
+    await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS booking_attachment_name TEXT;`);
+    await client.query(`ALTER TABLE travel_requests ADD COLUMN IF NOT EXISTS booking_attachment_data BYTEA;`);
+
     // Seed first Manager if no users exist
     const { rows } = await client.query('SELECT COUNT(*) AS n FROM users');
     if (parseInt(rows[0].n) === 0) {

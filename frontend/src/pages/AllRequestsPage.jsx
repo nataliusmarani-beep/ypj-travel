@@ -58,10 +58,12 @@ export default function AllRequestsPage({ user }) {
   const [picNotes, setPicNotes]   = useState('');
   const [updating, setUpdating]   = useState(false);
 
-  const [paxModal, setPaxModal]   = useState(null);
-  const [paxBooking, setPaxBooking] = useState('');
-  const [paxSeat, setPaxSeat]     = useState('');
-  const [savingPax, setSavingPax] = useState(false);
+  const [paxModal, setPaxModal]         = useState(null);
+  const [paxBooking, setPaxBooking]     = useState('');
+  const [paxSeat, setPaxSeat]           = useState('');
+  const [paxDeadline, setPaxDeadline]   = useState('');
+  const [paxFile, setPaxFile]           = useState(null);
+  const [savingPax, setSavingPax]       = useState(false);
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
@@ -114,18 +116,29 @@ export default function AllRequestsPage({ user }) {
     }
   };
 
-  const openPaxModal = (requestId, pax) => {
-    setPaxModal({ requestId, pax });
+  const openPaxModal = (requestId, pax, request) => {
+    setPaxModal({ requestId, pax, request });
     setPaxBooking(pax.booking_ref || '');
     setPaxSeat(pax.seat_number || '');
+    const existing = request?.payment_deadline
+      ? new Date(request.payment_deadline).toISOString().slice(0, 16)
+      : '';
+    setPaxDeadline(existing);
+    setPaxFile(null);
   };
 
   const handleSavePax = async () => {
     setSavingPax(true);
     try {
-      await api.updatePassenger(paxModal.requestId, paxModal.pax.id, {
-        booking_ref: paxBooking, seat_number: paxSeat,
-      });
+      const fd = new FormData();
+      fd.append('booking_ref', paxBooking);
+      fd.append('seat_number', paxSeat);
+      if (paxDeadline) fd.append('payment_deadline', new Date(paxDeadline).toISOString());
+      if (paxFile)     fd.append('attachment', paxFile);
+
+      await api.updatePassenger(paxModal.requestId, paxModal.pax.id, fd);
+
+      const statusChanged = paxDeadline || paxFile;
       setDetail(prev => {
         const d = prev[paxModal.requestId];
         if (!d) return prev;
@@ -133,12 +146,18 @@ export default function AllRequestsPage({ user }) {
           ...prev,
           [paxModal.requestId]: {
             ...d,
+            payment_deadline: paxDeadline ? new Date(paxDeadline).toISOString() : d.payment_deadline,
             passengers: d.passengers.map(p =>
-              p.id === paxModal.pax.id ? { ...p, booking_ref: paxBooking, seat_number: paxSeat } : p
+              p.id === paxModal.pax.id ? { ...p, booking_ref: paxBooking } : p
             ),
           },
         };
       });
+      if (statusChanged) {
+        setRequests(rs => rs.map(r =>
+          r.id === paxModal.requestId ? { ...r, status: 'booked' } : r
+        ));
+      }
       setPaxModal(null);
     } catch (e) {
       setError(e.message || 'Save failed.');
@@ -364,7 +383,7 @@ export default function AllRequestsPage({ user }) {
                                       <button
                                         className="btn btn-ghost btn-sm"
                                         style={{ fontSize: 11, borderRadius: 8 }}
-                                        onClick={() => openPaxModal(r.id, p)}
+                                        onClick={() => openPaxModal(r.id, p, det)}
                                       >
                                         Edit
                                       </button>
@@ -425,16 +444,67 @@ export default function AllRequestsPage({ user }) {
       {/* Passenger Edit Modal */}
       {paxModal && (
         <div className="modal-overlay" onClick={() => setPaxModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 20 }}>
+          <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, maxWidth: 480 }}>
             <div className="modal-header">
-              <div className="modal-title">Edit Passenger — {paxModal.pax.passenger_name}</div>
+              <div className="modal-title">Booking Details — {paxModal.pax.passenger_name}</div>
               <button className="modal-close" onClick={() => setPaxModal(null)}>✕</button>
             </div>
-            <div className="modal-body">
-              <div className="form-group">
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+              {/* Booking Reference */}
+              <div className="form-group" style={{ margin: 0 }}>
                 <label className="form-label">Booking Reference</label>
-                <input className="form-input" style={{ borderRadius: 10 }} value={paxBooking} onChange={e => setPaxBooking(e.target.value)} placeholder="e.g. ABC123" />
+                <input className="form-input" style={{ borderRadius: 10 }} value={paxBooking}
+                  onChange={e => setPaxBooking(e.target.value)} placeholder="e.g. ABC123" />
               </div>
+
+              {/* Payment Deadline */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Payment Deadline</label>
+                <input className="form-input" type="datetime-local" style={{ borderRadius: 10 }}
+                  value={paxDeadline} onChange={e => setPaxDeadline(e.target.value)} />
+              </div>
+
+              {/* Booking Attachment */}
+              <div className="form-group" style={{ margin: 0 }}>
+                <label className="form-label">Booking Attachment <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(PDF, image)</span></label>
+                <label style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  border: '1.5px dashed var(--border)', borderRadius: 10,
+                  padding: '12px 14px', cursor: 'pointer', background: '#f8fafc',
+                  fontSize: 13, color: 'var(--muted)',
+                }}>
+                  <span style={{ fontSize: 18 }}>📎</span>
+                  <span>{paxFile ? paxFile.name : (paxModal.request?.booking_attachment_name || 'Click to attach file…')}</span>
+                  <input type="file" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }}
+                    onChange={e => setPaxFile(e.target.files[0] || null)} />
+                </label>
+                {paxModal.request?.booking_attachment_name && !paxFile && (
+                  <button
+                    type="button"
+                    style={{ marginTop: 6, fontSize: 11, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    onClick={async () => {
+                      const blob = await api.downloadAttachment(paxModal.requestId);
+                      const url  = URL.createObjectURL(blob);
+                      const a    = document.createElement('a');
+                      a.href = url; a.download = paxModal.request.booking_attachment_name; a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    ⬇️ Download existing: {paxModal.request.booking_attachment_name}
+                  </button>
+                )}
+              </div>
+
+              {(paxDeadline || paxFile) && (
+                <div style={{
+                  background: '#dcfce7', border: '1px solid #86efac',
+                  borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#15803d',
+                  display: 'flex', alignItems: 'center', gap: 6,
+                }}>
+                  ✅ Status will automatically change to <strong>Booked</strong> on save.
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button className="btn btn-secondary" style={{ borderRadius: 10 }} onClick={() => setPaxModal(null)}>Cancel</button>

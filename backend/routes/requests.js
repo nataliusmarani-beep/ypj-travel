@@ -2,6 +2,8 @@ const router   = require('express').Router();
 const { pool } = require('../db');
 const { sendRequestNotification, sendBookingNotification } = require('../mailer');
 const { notifyPIC, notifyUser } = require('../telegram');
+const multer   = require('multer');
+const upload   = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const isPIC = r => r === 'Manager' || r === 'PIC Travel';
 
@@ -37,7 +39,13 @@ router.get('/', async (req, res) => {
 // ── Get single request + passengers ───────────────────────────────────────
 router.get('/:id', async (req, res) => {
   const { rows: [req_] } = await pool.query(`
-    SELECT tr.*, re.name AS rti_event_name
+    SELECT tr.id, tr.submitter_id, tr.status, tr.request_type, tr.travel_purpose,
+           tr.transport_type, tr.outbound_from, tr.outbound_to, tr.outbound_date,
+           tr.has_inbound, tr.inbound_from, tr.inbound_to, tr.inbound_date,
+           tr.notes, tr.pic_notes, tr.pic_action_by, tr.pic_action_at,
+           tr.payment_deadline, tr.booking_attachment_name,
+           tr.submitted_at, tr.updated_at, tr.airplane_type, tr.rti_event_id,
+           re.name AS rti_event_name
     FROM travel_requests tr
     LEFT JOIN rti_events re ON tr.rti_event_id = re.id
     WHERE tr.id = $1
@@ -137,15 +145,59 @@ router.patch('/:id/status', async (req, res) => {
   res.json(updated);
 });
 
-// ── Update passenger booking ref (PIC Travel) ─────────────────────────────
-router.patch('/:id/passengers/:pid', async (req, res) => {
+// ── Update passenger booking ref + payment deadline + attachment (PIC Travel) ─
+router.patch('/:id/passengers/:pid', upload.single('attachment'), async (req, res) => {
   if (!isPIC(req.user.role)) return res.status(403).json({ error: 'Forbidden.' });
-  const { booking_ref, seat_number, booking_status } = req.body;
+  const { booking_ref, seat_number, booking_status, payment_deadline } = req.body;
+
   await pool.query(
-    `UPDATE passengers SET booking_ref=$1,seat_number=$2,booking_status=$3 WHERE id=$4 AND request_id=$5`,
+    `UPDATE passengers SET booking_ref=$1, seat_number=$2, booking_status=$3 WHERE id=$4 AND request_id=$5`,
     [booking_ref||null, seat_number||null, booking_status||'pending', req.params.pid, req.params.id]
   );
+
+  // Update request-level booking fields
+  const updates = [];
+  const vals    = [];
+  let   idx     = 1;
+
+  if (payment_deadline) { updates.push(`payment_deadline=$${idx++}`); vals.push(payment_deadline); }
+
+  if (req.file) {
+    updates.push(`booking_attachment_name=$${idx++}`); vals.push(req.file.originalname);
+    updates.push(`booking_attachment_data=$${idx++}`); vals.push(req.file.buffer);
+  }
+
+  // Auto-set status to booked when payment deadline or attachment is saved
+  if (payment_deadline || req.file) {
+    updates.push(`status='booked'`);
+    updates.push(`pic_action_by=$${idx++}`);   vals.push(req.user.name);
+    updates.push(`pic_action_at=NOW()`);
+    updates.push(`updated_at=NOW()`);
+  }
+
+  if (updates.length > 0) {
+    vals.push(req.params.id);
+    await pool.query(
+      `UPDATE travel_requests SET ${updates.join(', ')} WHERE id=$${idx}`,
+      vals
+    );
+  }
+
   res.json({ ok: true });
+});
+
+// ── Download booking attachment ────────────────────────────────────────────
+router.get('/:id/attachment', async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT booking_attachment_name, booking_attachment_data FROM travel_requests WHERE id=$1`,
+    [req.params.id]
+  );
+  if (!rows[0] || !rows[0].booking_attachment_data)
+    return res.status(404).json({ error: 'No attachment found.' });
+  const { booking_attachment_name, booking_attachment_data } = rows[0];
+  res.setHeader('Content-Disposition', `attachment; filename="${booking_attachment_name}"`);
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.send(booking_attachment_data);
 });
 
 // ── Stats ──────────────────────────────────────────────────────────────────

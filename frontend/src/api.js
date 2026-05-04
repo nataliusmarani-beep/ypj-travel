@@ -43,7 +43,16 @@ export const api = {
   getRequest:  (id)   => req('GET',   `/requests/${id}`),
   submitRequest:(b)   => req('POST',  '/requests', b),
   updateStatus:(id,b) => req('PATCH', `/requests/${id}/status`, b),
-  updatePassenger:(rid,pid,b) => req('PATCH', `/requests/${rid}/passengers/${pid}`, b),
+  updatePassenger:(rid,pid,formData) => fetch(`/api/requests/${rid}/passengers/${pid}`, {
+    method: 'PATCH', credentials: 'include', body: formData,
+  }).then(async r => {
+    if (!r.ok) { const e = await r.json().catch(() => ({ error: 'Update failed' })); throw new Error(e.error); }
+    return r.json();
+  }),
+  downloadAttachment:(rid) => fetch(`/api/requests/${rid}/attachment`, { credentials: 'include' }).then(r => {
+    if (!r.ok) throw new Error('Download failed');
+    return r.blob();
+  }),
   getStats:    ()     => req('GET',   '/requests/meta/stats'),
 
   // RTI Events
