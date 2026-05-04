@@ -409,6 +409,21 @@ button { font-family: inherit; }
 .footer-copy  { }
 .footer-links { white-space: nowrap; }
 
+/* ── All Requests filter grid ── */
+.all-requests-filters {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+}
+.all-requests-filters .form-group { margin: 0; }
+
+@media (max-width: 900px) {
+  .all-requests-filters { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 600px) {
+  .all-requests-filters { grid-template-columns: repeat(2, 1fr); }
+}
+
 /* ── Stats Grid ── */
 .stats-grid {
   display: grid;

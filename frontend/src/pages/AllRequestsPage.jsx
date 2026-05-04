@@ -205,7 +205,7 @@ export default function AllRequestsPage({ user }) {
         <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--muted)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
           🔍 Filters
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 12 }}>
+        <div className="all-requests-filters">
           <div className="form-group" style={{ margin: 0 }}>
             <label className="form-label">Status</label>
             <select className="form-select" value={fStatus} onChange={e => setFStatus(e.target.value)} style={{ width: '100%', borderRadius: 8 }}>
@@ -253,10 +253,11 @@ export default function AllRequestsPage({ user }) {
         </div>
       ) : (
         <div style={{
-          background: '#fff', borderRadius: 16, overflow: 'hidden',
+          background: '#fff', borderRadius: 16,
           boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
         }}>
-          <table className="table">
+          <div style={{ overflowX: 'auto', borderRadius: 16 }}>
+          <table className="table" style={{ minWidth: 700 }}>
             <thead>
               <tr>
                 <th>#</th>
@@ -379,6 +380,7 @@ export default function AllRequestsPage({ user }) {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 
