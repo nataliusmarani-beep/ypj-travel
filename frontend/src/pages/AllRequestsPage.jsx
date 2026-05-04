@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api } from '../api.js';
+import StatusTracker from '../components/StatusTracker.jsx';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -319,6 +320,7 @@ export default function AllRequestsPage({ user }) {
                     {isOpen && det && (
                       <tr key={`${r.id}-det`}>
                         <td colSpan={9} style={{ background: '#f8fafc', padding: '16px 20px' }}>
+                          <StatusTracker status={r.status} />
                           {det.pic_notes && (
                             <div style={{
                               background: '#fffbeb', border: '1px solid #fde68a',
