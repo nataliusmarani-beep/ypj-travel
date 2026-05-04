@@ -113,12 +113,6 @@ function StatusTracker({ status }) {
     </div>
   );
 }
-          );
-        })}
-      </div>
-    </div>
-  );
-}
 
 export default function MyRequestsPage({ user }) {
   const [requests, setRequests]   = useState([]);
