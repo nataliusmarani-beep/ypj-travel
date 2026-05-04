@@ -339,13 +339,13 @@ export default function AllRequestsPage({ user }) {
                               <thead>
                                 <tr>
                                   <th>Name</th><th>Cat</th><th>UID</th><th>Gender</th>
-                                  <th>ID</th><th>Booking Ref</th><th>Seat</th><th></th>
+                                  <th>ID</th><th>Booking Ref</th><th></th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {(det.passengers || []).map(p => (
                                   <tr key={p.id}>
-                                    <td style={{ fontWeight: 600 }}>{p.name}</td>
+                                    <td style={{ fontWeight: 600 }}>{p.passenger_name}</td>
                                     <td>
                                       <span style={{
                                         padding: '2px 8px', borderRadius: 6, fontSize: 10, fontWeight: 700,
@@ -357,7 +357,6 @@ export default function AllRequestsPage({ user }) {
                                     <td>{p.gender || '—'}</td>
                                     <td>{p.id_type}: {p.id_number}</td>
                                     <td>{p.booking_ref || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
-                                    <td>{p.seat_number || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                                     <td>
                                       <button
                                         className="btn btn-ghost btn-sm"
@@ -424,7 +423,7 @@ export default function AllRequestsPage({ user }) {
         <div className="modal-overlay" onClick={() => setPaxModal(null)}>
           <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 20 }}>
             <div className="modal-header">
-              <div className="modal-title">Edit Passenger — {paxModal.pax.name}</div>
+              <div className="modal-title">Edit Passenger — {paxModal.pax.passenger_name}</div>
               <button className="modal-close" onClick={() => setPaxModal(null)}>✕</button>
             </div>
             <div className="modal-body">
