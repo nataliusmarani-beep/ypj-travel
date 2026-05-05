@@ -153,20 +153,6 @@ export default function MyRequestsPage({ user }) {
                     border: isOpen ? '1.5px solid var(--primary)' : '1.5px solid transparent',
                   }}>
 
-                    {/* ── PIC Notes banner — always visible when present ── */}
-                    {r.pic_notes && (
-                      <div style={{
-                        background: '#fffbeb', borderBottom: '1px solid #fde68a',
-                        padding: '10px 18px', display: 'flex', alignItems: 'flex-start', gap: 8,
-                      }}>
-                        <span style={{ fontSize: 13 }}>📋</span>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#92400e', marginBottom: 2 }}>PIC Notes</div>
-                          <div style={{ fontSize: 12, color: '#78350f', lineHeight: 1.4 }}>{r.pic_notes}</div>
-                        </div>
-                      </div>
-                    )}
-
                     {/* ── Status tracker ── */}
                     <div style={{ padding: '0 18px', borderBottom: '1px solid var(--border)' }}>
                       <StatusTracker status={r.status} />
