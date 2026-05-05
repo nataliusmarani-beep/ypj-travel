@@ -319,14 +319,6 @@ export default function AllRequestsPage({ user }) {
                       <tr key={`${r.id}-det`}>
                         <td colSpan={9} style={{ background: '#f8fafc', padding: '16px 20px' }}>
                           <StatusTracker status={r.status} />
-                          {det.pic_notes && (
-                            <div style={{
-                              background: '#fffbeb', border: '1px solid #fde68a',
-                              borderRadius: 8, padding: '8px 14px', marginBottom: 12, fontSize: 13,
-                            }}>
-                              <strong style={{ color: '#92400e' }}>PIC Notes:</strong> <span style={{ color: '#78350f' }}>{det.pic_notes}</span>
-                            </div>
-                          )}
                           {det.notes && (
                             <div style={{ marginBottom: 12, fontSize: 13, color: 'var(--text)' }}>
                               <strong>Notes:</strong> {det.notes}
