@@ -385,10 +385,10 @@ export default function DashboardPage({ user }) {
   }
 
   /* ─────────────────────────── PIC / MANAGER VIEW ─────────────────────────── */
-  const submitted   = stats?.submitted   ?? 0;
-  const processing  = stats?.processing  ?? 0;
-  const total_month = stats?.total_month ?? 0;
-  const total_all   = stats?.total_all   ?? 0;
+  const submitted   = parseInt(stats?.pending     ?? 0);
+  const processing  = parseInt(stats?.processing  ?? 0);
+  const total_month = parseInt(stats?.this_month  ?? 0);
+  const total_all   = parseInt(stats?.total       ?? 0);
 
   return (
     <div>
