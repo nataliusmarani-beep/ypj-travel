@@ -392,7 +392,7 @@ export default function DashboardPage({ user }) {
     const d = new Date(r.submitted_at);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
   }).length;
-  const total_all   = parseInt(stats?.total ?? requests.length);
+  const completed   = requests.filter(r => r.status === 'confirmed').length;
 
   return (
     <div>
@@ -465,12 +465,12 @@ export default function DashboardPage({ user }) {
         <StatCard icon="⚙️" value={processing}  label="Processing"   color="#d97706" accent="#fef3c7"
           isActive={activeFilter === 'processing'}
           onClick={() => setFilter(f => f === 'processing' ? null : 'processing')} />
+        <StatCard icon="✅" value={completed}   label="Completed"    color="#16a34a" accent="#dcfce7"
+          isActive={activeFilter === 'completed'}
+          onClick={() => setFilter(f => f === 'completed' ? null : 'completed')} />
         <StatCard icon="📅" value={total_month} label="This Month"   color="var(--navy)" accent="#e0e7ff"
           isActive={activeFilter === 'this_month'}
           onClick={() => setFilter(f => f === 'this_month' ? null : 'this_month')} />
-        <StatCard icon="🗃️" value={total_all}   label="All Time"     color="#64748b" accent="#f1f5f9"
-          isActive={activeFilter === 'all'}
-          onClick={() => setFilter(f => f === 'all' ? null : 'all')} />
       </div>
 
       {/* Recent Requests */}
@@ -479,6 +479,8 @@ export default function DashboardPage({ user }) {
           ? requests.filter(r => r.status === 'submitted')
           : activeFilter === 'processing'
           ? requests.filter(r => r.status === 'processing')
+          : activeFilter === 'completed'
+          ? requests.filter(r => r.status === 'confirmed')
           : activeFilter === 'this_month'
           ? requests.filter(r => {
               const d = new Date(r.submitted_at);
@@ -488,14 +490,16 @@ export default function DashboardPage({ user }) {
           ? requests
           : requests.slice(0, 5);
 
-        const filterLabel = activeFilter === 'submitted' ? 'Needs Action'
-          : activeFilter === 'processing' ? 'Processing'
-          : activeFilter === 'this_month' ? 'This Month'
-          : activeFilter === 'all' ? 'All Time'
+        const filterLabel = activeFilter === 'submitted'  ? 'Needs Action'
+          : activeFilter === 'processing'  ? 'Processing'
+          : activeFilter === 'completed'   ? 'Completed'
+          : activeFilter === 'this_month'  ? 'This Month'
+          : activeFilter === 'all'         ? 'All Time'
           : 'Recent Requests';
 
-        const viewAllQuery = activeFilter === 'submitted' ? '?status=submitted'
-          : activeFilter === 'processing' ? '?status=processing'
+        const viewAllQuery = activeFilter === 'submitted'  ? '?status=submitted'
+          : activeFilter === 'processing'  ? '?status=processing'
+          : activeFilter === 'completed'   ? '?status=confirmed'
           : '';
 
         return (
