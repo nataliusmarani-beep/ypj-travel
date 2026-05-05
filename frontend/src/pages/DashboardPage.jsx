@@ -39,21 +39,32 @@ function StatusPill({ status }) {
   );
 }
 
-function StatCard({ icon, value, label, color = 'var(--navy)', accent }) {
+function StatCard({ icon, value, label, color = 'var(--navy)', accent, onClick, isActive }) {
   return (
-    <div style={{
-      background: '#fff', borderRadius: 16, padding: '20px 24px',
-      boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
-      display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 140,
-    }}>
+    <div
+      onClick={onClick}
+      style={{
+        background: isActive ? color : '#fff',
+        borderRadius: 16, padding: '20px 24px',
+        boxShadow: isActive
+          ? `0 4px 20px ${color}33`
+          : '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+        display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 140,
+        cursor: onClick ? 'pointer' : 'default',
+        border: isActive ? `2px solid ${color}` : '2px solid transparent',
+        transition: 'all .15s',
+        transform: isActive ? 'translateY(-2px)' : 'none',
+      }}
+    >
       <div style={{
-        width: 48, height: 48, borderRadius: 14, background: accent || '#f0f4ff',
+        width: 48, height: 48, borderRadius: 14,
+        background: isActive ? 'rgba(255,255,255,.2)' : (accent || '#f0f4ff'),
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontSize: 22, flexShrink: 0,
       }}>{icon}</div>
       <div>
-        <div style={{ fontSize: 28, fontWeight: 800, color, lineHeight: 1 }}>{value ?? '—'}</div>
-        <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 4, fontWeight: 500 }}>{label}</div>
+        <div style={{ fontSize: 28, fontWeight: 800, lineHeight: 1, color: isActive ? '#fff' : color }}>{value ?? '—'}</div>
+        <div style={{ fontSize: 12, marginTop: 4, fontWeight: 500, color: isActive ? 'rgba(255,255,255,.8)' : 'var(--muted)' }}>{label}</div>
       </div>
     </div>
   );
@@ -123,11 +134,12 @@ function RtiTicker({ rtis }) {
 }
 
 export default function DashboardPage({ user }) {
-  const [stats, setStats]       = useState(null);
-  const [requests, setRequests] = useState([]);
-  const [rtis, setRtis]         = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const navigate                = useNavigate();
+  const [stats, setStats]           = useState(null);
+  const [requests, setRequests]     = useState([]);
+  const [rtis, setRtis]             = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [activeFilter, setFilter]   = useState(null);
+  const navigate                    = useNavigate();
 
   const isPIC = user.role === 'Manager' || user.role === 'PIC Travel';
   const gi    = greetingInfo();
@@ -140,7 +152,7 @@ export default function DashboardPage({ user }) {
   useEffect(() => {
     const loads = [
       api.getStats().then(setStats).catch(() => {}),
-      api.getRequests(isPIC ? '?limit=5' : '?my=1&limit=5')
+      api.getRequests(isPIC ? '?limit=50' : '?my=1&limit=5')
         .then(d => setRequests(d.requests || d))
         .catch(() => {}),
       api.getRTIs()
@@ -443,54 +455,107 @@ export default function DashboardPage({ user }) {
 
       {/* Stat Cards */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-        <StatCard icon="📥" value={submitted}   label="Needs Action"      color="#2563eb" accent="#dbeafe" />
-        <StatCard icon="⚙️" value={processing}  label="Processing"        color="#d97706" accent="#fef3c7" />
-        <StatCard icon="📅" value={total_month} label="This Month"        color="var(--navy)" accent="#e0e7ff" />
-        <StatCard icon="🗃️" value={total_all}   label="All Time"          color="var(--muted)" accent="#f1f5f9" />
+        <StatCard icon="📥" value={submitted}   label="Needs Action" color="#2563eb" accent="#dbeafe"
+          isActive={activeFilter === 'submitted'}
+          onClick={() => setFilter(f => f === 'submitted' ? null : 'submitted')} />
+        <StatCard icon="⚙️" value={processing}  label="Processing"   color="#d97706" accent="#fef3c7"
+          isActive={activeFilter === 'processing'}
+          onClick={() => setFilter(f => f === 'processing' ? null : 'processing')} />
+        <StatCard icon="📅" value={total_month} label="This Month"   color="var(--navy)" accent="#e0e7ff"
+          isActive={activeFilter === 'this_month'}
+          onClick={() => setFilter(f => f === 'this_month' ? null : 'this_month')} />
+        <StatCard icon="🗃️" value={total_all}   label="All Time"     color="#64748b" accent="#f1f5f9"
+          isActive={activeFilter === 'all'}
+          onClick={() => setFilter(f => f === 'all' ? null : 'all')} />
       </div>
 
       {/* Recent Requests */}
-      <div style={{
-        background: '#fff', borderRadius: 16, padding: '20px 24px',
-        boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>📋</span> Recent Requests
+      {(() => {
+        const now = new Date();
+        const filtered = activeFilter === 'submitted'
+          ? requests.filter(r => r.status === 'submitted')
+          : activeFilter === 'processing'
+          ? requests.filter(r => r.status === 'processing')
+          : activeFilter === 'this_month'
+          ? requests.filter(r => {
+              const d = new Date(r.submitted_at);
+              return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+            })
+          : activeFilter === 'all'
+          ? requests
+          : requests.slice(0, 5);
+
+        const filterLabel = activeFilter === 'submitted' ? 'Needs Action'
+          : activeFilter === 'processing' ? 'Processing'
+          : activeFilter === 'this_month' ? 'This Month'
+          : activeFilter === 'all' ? 'All Time'
+          : 'Recent Requests';
+
+        const viewAllQuery = activeFilter === 'submitted' ? '?status=submitted'
+          : activeFilter === 'processing' ? '?status=processing'
+          : '';
+
+        return (
+          <div style={{
+            background: '#fff', borderRadius: 16, padding: '20px 24px',
+            boxShadow: '0 1px 3px rgba(0,0,0,.08), 0 4px 16px rgba(0,0,0,.04)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 15, fontWeight: 700, color: 'var(--navy)', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 18 }}>📋</span> {filterLabel}
+                {activeFilter && (
+                  <span style={{
+                    fontSize: 11, fontWeight: 600, background: '#f1f5f9', color: 'var(--muted)',
+                    borderRadius: 20, padding: '2px 8px',
+                  }}>{filtered.length}</span>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                {activeFilter && (
+                  <button className="btn btn-ghost btn-sm" style={{ fontSize: 11 }} onClick={() => setFilter(null)}>
+                    ✕ Clear
+                  </button>
+                )}
+                <button className="btn btn-ghost btn-sm" onClick={() => navigate(`/requests${viewAllQuery}`)}>
+                  View all →
+                </button>
+              </div>
+            </div>
+            {filtered.length === 0 ? (
+              <div style={{ color: 'var(--muted)', fontSize: 13, padding: '24px 0', textAlign: 'center' }}>
+                No requests found.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Submitter</th>
+                      <th>Route</th>
+                      <th>Date</th>
+                      <th>Purpose</th>
+                      <th style={{ textAlign: 'center' }}>Pax</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(r => (
+                      <tr key={r.id}>
+                        <td style={{ fontWeight: 600 }}>{r.submitter_name || r.user_name || '—'}</td>
+                        <td>{r.outbound_from} → {r.outbound_to}</td>
+                        <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(r.outbound_date)}</td>
+                        <td>{PURPOSE_LABEL[r.travel_purpose] || r.travel_purpose || r.purpose}</td>
+                        <td style={{ textAlign: 'center' }}>{r.passenger_count ?? '—'}</td>
+                        <td><StatusPill status={r.status} /></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={() => navigate('/requests')}>View all →</button>
-        </div>
-        {requests.length === 0 ? (
-          <div style={{ color: 'var(--muted)', fontSize: 13, padding: '16px 0' }}>No requests yet.</div>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Submitter</th>
-                  <th>Route</th>
-                  <th>Date</th>
-                  <th>Purpose</th>
-                  <th style={{ textAlign: 'center' }}>Pax</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.slice(0, 5).map(r => (
-                  <tr key={r.id}>
-                    <td style={{ fontWeight: 600 }}>{r.submitter_name || r.user_name || '—'}</td>
-                    <td>{r.outbound_from} → {r.outbound_to}</td>
-                    <td style={{ whiteSpace: 'nowrap' }}>{fmtDate(r.outbound_date)}</td>
-                    <td>{PURPOSE_LABEL[r.travel_purpose] || r.travel_purpose || r.purpose}</td>
-                    <td style={{ textAlign: 'center' }}>{r.passenger_count ?? '—'}</td>
-                    <td><StatusPill status={r.status} /></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+        );
+      })()}
     </div>
   );
 }
