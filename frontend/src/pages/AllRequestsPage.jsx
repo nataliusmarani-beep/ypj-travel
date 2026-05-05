@@ -540,7 +540,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
     const bg          = done ? '#f0fdf4' : active ? '#fff' : '#f8fafc';
 
     return (
-      <div style={{ borderRadius: 12, border: `1.5px solid ${borderColor}`, background: bg, overflow: 'hidden', marginBottom: 10 }}>
+      <div style={{ borderRadius: 12, border: `1.5px solid ${borderColor}`, background: bg, marginBottom: 10 }}>
         <div style={{
           padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
           borderBottom: (done || active) ? `1px solid ${done ? '#bbf7d0' : '#e8edf5'}` : 'none',
@@ -612,7 +612,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Comment</label>
-                  <textarea className="form-textarea" style={{ borderRadius: 8 }} rows={3}
+                  <textarea className="form-textarea" style={{ borderRadius: 8, resize: 'none' }} rows={4}
                     value={processingNotes} onChange={e => setProcessingNotes(e.target.value)}
                     placeholder="Processing notes visible to the staff member…" />
                 </div>
@@ -675,7 +675,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 <div className="form-group" style={{ margin: 0 }}>
                   <label className="form-label">Payment Notes</label>
-                  <textarea className="form-textarea" style={{ borderRadius: 8 }} rows={2}
+                  <textarea className="form-textarea" style={{ borderRadius: 8, resize: 'none' }} rows={4}
                     value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)}
                     placeholder="Payment confirmation details…" />
                 </div>
