@@ -385,10 +385,14 @@ export default function DashboardPage({ user }) {
   }
 
   /* ─────────────────────────── PIC / MANAGER VIEW ─────────────────────────── */
-  const submitted   = parseInt(stats?.pending     ?? 0);
-  const processing  = parseInt(stats?.processing  ?? 0);
-  const total_month = parseInt(stats?.this_month  ?? 0);
-  const total_all   = parseInt(stats?.total       ?? 0);
+  const now = new Date();
+  const submitted   = requests.filter(r => r.status === 'submitted').length;
+  const processing  = requests.filter(r => r.status === 'processing').length;
+  const total_month = requests.filter(r => {
+    const d = new Date(r.submitted_at);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+  const total_all   = parseInt(stats?.total ?? requests.length);
 
   return (
     <div>
@@ -471,7 +475,6 @@ export default function DashboardPage({ user }) {
 
       {/* Recent Requests */}
       {(() => {
-        const now = new Date();
         const filtered = activeFilter === 'submitted'
           ? requests.filter(r => r.status === 'submitted')
           : activeFilter === 'processing'
