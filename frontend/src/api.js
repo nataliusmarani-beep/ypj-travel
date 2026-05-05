@@ -53,6 +53,16 @@ export const api = {
     if (!r.ok) throw new Error('Download failed');
     return r.blob();
   }),
+  downloadPaymentAttachment:(rid) => fetch(`/api/requests/${rid}/payment-attachment`, { credentials: 'include' }).then(r => {
+    if (!r.ok) throw new Error('Download failed');
+    return r.blob();
+  }),
+  updateSection:(rid, formData) => fetch(`/api/requests/${rid}/section`, {
+    method: 'PATCH', credentials: 'include', body: formData,
+  }).then(async r => {
+    if (!r.ok) { const e = await r.json().catch(() => ({ error: 'Save failed' })); throw new Error(e.error); }
+    return r.json();
+  }),
   getStats:    ()     => req('GET',   '/requests/meta/stats'),
 
   // RTI Events

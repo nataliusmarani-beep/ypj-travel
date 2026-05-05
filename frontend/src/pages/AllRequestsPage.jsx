@@ -58,12 +58,7 @@ export default function AllRequestsPage({ user }) {
   const [picNotes, setPicNotes]   = useState('');
   const [updating, setUpdating]   = useState(false);
 
-  const [paxModal, setPaxModal]         = useState(null);
-  const [paxBooking, setPaxBooking]     = useState('');
-  const [paxSeat, setPaxSeat]           = useState('');
-  const [paxDeadline, setPaxDeadline]   = useState('');
-  const [paxFile, setPaxFile]           = useState(null);
-  const [savingPax, setSavingPax]       = useState(false);
+  const [bookingModal, setBookingModal] = useState(null); // { request, detail }
 
   const buildQuery = useCallback(() => {
     const params = new URLSearchParams();
@@ -116,54 +111,31 @@ export default function AllRequestsPage({ user }) {
     }
   };
 
-  const openPaxModal = (requestId, pax, request) => {
-    setPaxModal({ requestId, pax, request });
-    setPaxBooking(pax.booking_ref || '');
-    setPaxSeat(pax.seat_number || '');
-    const existing = request?.payment_deadline
-      ? new Date(request.payment_deadline).toISOString().slice(0, 16)
-      : '';
-    setPaxDeadline(existing);
-    setPaxFile(null);
+  const openBookingModal = async (r) => {
+    // Ensure detail is loaded
+    let det = detail[r.id];
+    if (!det) {
+      try {
+        det = await api.getRequest(r.id);
+        setDetail(prev => ({ ...prev, [r.id]: det }));
+      } catch { return; }
+    }
+    setBookingModal({ request: r, detail: det });
   };
 
-  const handleSavePax = async () => {
-    setSavingPax(true);
-    try {
-      const fd = new FormData();
-      fd.append('booking_ref', paxBooking);
-      fd.append('seat_number', paxSeat);
-      if (paxDeadline) fd.append('payment_deadline', new Date(paxDeadline).toISOString());
-      if (paxFile)     fd.append('attachment', paxFile);
-
-      await api.updatePassenger(paxModal.requestId, paxModal.pax.id, fd);
-
-      const statusChanged = paxDeadline || paxFile;
-      setDetail(prev => {
-        const d = prev[paxModal.requestId];
-        if (!d) return prev;
-        return {
-          ...prev,
-          [paxModal.requestId]: {
-            ...d,
-            payment_deadline: paxDeadline ? new Date(paxDeadline).toISOString() : d.payment_deadline,
-            passengers: d.passengers.map(p =>
-              p.id === paxModal.pax.id ? { ...p, booking_ref: paxBooking } : p
-            ),
-          },
-        };
-      });
-      if (statusChanged) {
-        setRequests(rs => rs.map(r =>
-          r.id === paxModal.requestId ? { ...r, status: 'booked' } : r
-        ));
-      }
-      setPaxModal(null);
-    } catch (e) {
-      setError(e.message || 'Save failed.');
-    } finally {
-      setSavingPax(false);
-    }
+  const handleSectionSave = async (requestId, section, formData, updatedFields) => {
+    const result = await api.updateSection(requestId, formData);
+    const newStatus = result.status;
+    setRequests(rs => rs.map(r => r.id === requestId ? { ...r, status: newStatus } : r));
+    setDetail(prev => {
+      const d = prev[requestId];
+      if (!d) return prev;
+      return { ...prev, [requestId]: { ...d, ...updatedFields } };
+    });
+    setBookingModal(prev => prev
+      ? { ...prev, request: { ...prev.request, status: newStatus }, detail: { ...prev.detail, ...updatedFields } }
+      : null
+    );
   };
 
   const handleExport = async () => {
@@ -329,9 +301,16 @@ export default function AllRequestsPage({ user }) {
                           <button
                             className="btn btn-primary btn-sm"
                             style={{ borderRadius: 8, fontSize: 11 }}
+                            onClick={() => openBookingModal(r)}
+                          >
+                            📋 Booking
+                          </button>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            style={{ borderRadius: 8, fontSize: 11 }}
                             onClick={() => openStatusModal(r)}
                           >
-                            Update
+                            ⚙️
                           </button>
                         </div>
                       </td>
@@ -361,7 +340,7 @@ export default function AllRequestsPage({ user }) {
                               <thead>
                                 <tr>
                                   <th>Name</th><th>Cat</th><th>UID</th><th>Gender</th>
-                                  <th>ID</th><th>Booking Ref</th><th></th>
+                                  <th>ID</th><th>Booking Ref</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -379,15 +358,6 @@ export default function AllRequestsPage({ user }) {
                                     <td>{p.gender || '—'}</td>
                                     <td>{p.id_type}: {p.id_number}</td>
                                     <td>{p.booking_ref || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
-                                    <td>
-                                      <button
-                                        className="btn btn-ghost btn-sm"
-                                        style={{ fontSize: 11, borderRadius: 8 }}
-                                        onClick={() => openPaxModal(r.id, p, det)}
-                                      >
-                                        Edit
-                                      </button>
-                                    </td>
                                   </tr>
                                 ))}
                               </tbody>
@@ -441,80 +411,309 @@ export default function AllRequestsPage({ user }) {
         </div>
       )}
 
-      {/* Passenger Edit Modal */}
-      {paxModal && (
-        <div className="modal-overlay" onClick={() => setPaxModal(null)}>
-          <div className="modal" onClick={e => e.stopPropagation()} style={{ borderRadius: 20, maxWidth: 480 }}>
-            <div className="modal-header">
-              <div className="modal-title">Booking Details — {paxModal.pax.passenger_name}</div>
-              <button className="modal-close" onClick={() => setPaxModal(null)}>✕</button>
-            </div>
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      {bookingModal && (
+        <BookingFlowModal
+          request={bookingModal.request}
+          detail={bookingModal.detail}
+          onClose={() => setBookingModal(null)}
+          onSectionSave={handleSectionSave}
+        />
+      )}
+    </div>
+  );
+}
 
-              {/* Booking Reference */}
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Booking Reference</label>
-                <input className="form-input" style={{ borderRadius: 10 }} value={paxBooking}
-                  onChange={e => setPaxBooking(e.target.value)} placeholder="e.g. ABC123" />
-              </div>
+// ── Booking Flow Modal ─────────────────────────────────────────────────────
+const STEP_KEYS = ['submitted', 'processing', 'booked', 'awaiting_payment', 'confirmed'];
 
-              {/* Payment Deadline */}
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Payment Deadline</label>
-                <input className="form-input" type="datetime-local" style={{ borderRadius: 10 }}
-                  value={paxDeadline} onChange={e => setPaxDeadline(e.target.value)} />
-              </div>
+function AttachBtn({ label, onDownload }) {
+  return (
+    <button type="button" onClick={onDownload} style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      fontSize: 11, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+    }}>⬇ {label}</button>
+  );
+}
 
-              {/* Booking Attachment */}
-              <div className="form-group" style={{ margin: 0 }}>
-                <label className="form-label">Booking Attachment <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(PDF, image, .msg, .eml)</span></label>
-                <label style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  border: '1.5px dashed var(--border)', borderRadius: 10,
-                  padding: '12px 14px', cursor: 'pointer', background: '#f8fafc',
-                  fontSize: 13, color: 'var(--muted)',
-                }}>
-                  <span style={{ fontSize: 18 }}>📎</span>
-                  <span>{paxFile ? paxFile.name : (paxModal.request?.booking_attachment_name || 'Click to attach file…')}</span>
-                  <input type="file" accept=".pdf,.jpg,.jpeg,.png,.msg,.eml" style={{ display: 'none' }}
-                    onChange={e => setPaxFile(e.target.files[0] || null)} />
-                </label>
-                {paxModal.request?.booking_attachment_name && !paxFile && (
-                  <button
-                    type="button"
-                    style={{ marginTop: 6, fontSize: 11, color: 'var(--primary)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-                    onClick={async () => {
-                      const blob = await api.downloadAttachment(paxModal.requestId);
-                      const url  = URL.createObjectURL(blob);
-                      const a    = document.createElement('a');
-                      a.href = url; a.download = paxModal.request.booking_attachment_name; a.click();
-                      URL.revokeObjectURL(url);
-                    }}
-                  >
-                    ⬇️ Download existing: {paxModal.request.booking_attachment_name}
-                  </button>
-                )}
-              </div>
-
-              {(paxDeadline || paxFile) && (
-                <div style={{
-                  background: '#dcfce7', border: '1px solid #86efac',
-                  borderRadius: 10, padding: '8px 12px', fontSize: 12, color: '#15803d',
-                  display: 'flex', alignItems: 'center', gap: 6,
-                }}>
-                  ✅ Status will automatically change to <strong>Booked</strong> on save.
-                </div>
-              )}
-            </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" style={{ borderRadius: 10 }} onClick={() => setPaxModal(null)}>Cancel</button>
-              <button className="btn btn-primary" style={{ borderRadius: 10 }} onClick={handleSavePax} disabled={savingPax}>
-                {savingPax ? 'Saving…' : 'Save'}
-              </button>
-            </div>
-          </div>
+function FilePickField({ file, setFile, existingName, onDownload }) {
+  return (
+    <div>
+      <label style={{
+        display: 'flex', alignItems: 'center', gap: 8,
+        border: '1.5px dashed var(--border)', borderRadius: 8,
+        padding: '9px 12px', cursor: 'pointer', background: '#f8fafc',
+        fontSize: 12, color: 'var(--muted)',
+      }}>
+        <span>📎</span>
+        <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {file ? file.name : existingName || 'Click to attach (.pdf, .eml, .msg, image)…'}
+        </span>
+        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.msg,.eml" style={{ display: 'none' }}
+          onChange={e => setFile(e.target.files[0] || null)} />
+      </label>
+      {existingName && !file && (
+        <div style={{ marginTop: 4 }}>
+          <AttachBtn label={`Download: ${existingName}`} onDownload={onDownload} />
         </div>
       )}
+    </div>
+  );
+}
+
+function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
+  const status     = request.status;
+  const currentIdx = STEP_KEYS.indexOf(status);
+  const isStepDone   = (key) => STEP_KEYS.indexOf(key) <= currentIdx;
+  const isStepActive = (key) => STEP_KEYS.indexOf(key) === currentIdx + 1;
+
+  const [processingNotes, setProcessingNotes] = useState(detail.pic_notes || '');
+  const [processingFile, setProcessingFile]   = useState(null);
+
+  const [bookingRefs, setBookingRefs] = useState(
+    Object.fromEntries((detail.passengers || []).map(p => [p.id, p.booking_ref || '']))
+  );
+  const [paymentDeadline, setPaymentDeadline] = useState(
+    detail.payment_deadline ? new Date(detail.payment_deadline).toISOString().slice(0, 16) : ''
+  );
+
+  const [paymentNotes, setPaymentNotes] = useState(detail.payment_notes || '');
+  const [paymentFile, setPaymentFile]   = useState(null);
+
+  const [saving, setSaving]   = useState(false);
+  const [saveErr, setSaveErr] = useState('');
+
+  const dlAttachment = async () => {
+    const blob = await api.downloadAttachment(request.id);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = detail.booking_attachment_name; a.click();
+  };
+  const dlPayment = async () => {
+    const blob = await api.downloadPaymentAttachment(request.id);
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = detail.payment_attachment_name; a.click();
+  };
+
+  const save = async (section) => {
+    setSaving(true); setSaveErr('');
+    try {
+      const fd = new FormData();
+      fd.append('section', section);
+      let updatedFields = {};
+
+      if (section === 'processing') {
+        fd.append('pic_notes', processingNotes);
+        if (processingFile) fd.append('attachment', processingFile);
+        updatedFields = {
+          pic_notes: processingNotes,
+          booking_attachment_name: processingFile ? processingFile.name : detail.booking_attachment_name,
+        };
+      } else if (section === 'booked') {
+        fd.append('payment_deadline', paymentDeadline ? new Date(paymentDeadline).toISOString() : '');
+        fd.append('booking_refs_json', JSON.stringify(
+          Object.entries(bookingRefs).map(([pax_id, booking_ref]) => ({ pax_id: parseInt(pax_id), booking_ref }))
+        ));
+        updatedFields = {
+          payment_deadline: paymentDeadline ? new Date(paymentDeadline).toISOString() : null,
+          passengers: (detail.passengers || []).map(p => ({ ...p, booking_ref: bookingRefs[p.id] ?? p.booking_ref })),
+        };
+      } else if (section === 'payment') {
+        fd.append('payment_notes', paymentNotes);
+        if (paymentFile) fd.append('attachment', paymentFile);
+        updatedFields = {
+          payment_notes: paymentNotes,
+          payment_attachment_name: paymentFile ? paymentFile.name : detail.payment_attachment_name,
+        };
+      }
+
+      await onSectionSave(request.id, section, fd, updatedFields);
+    } catch (e) {
+      setSaveErr(e.message || 'Save failed.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const Step = ({ stepKey, num, title, doneContent, activeContent }) => {
+    const done   = isStepDone(stepKey);
+    const active = isStepActive(stepKey) || (status === 'confirmed' && stepKey === 'confirmed');
+    const future = !done && !active;
+
+    const borderColor = done ? '#86efac' : active ? '#2563eb' : '#e2e8f0';
+    const bg          = done ? '#f0fdf4' : active ? '#fff' : '#f8fafc';
+
+    return (
+      <div style={{ borderRadius: 12, border: `1.5px solid ${borderColor}`, background: bg, overflow: 'hidden', marginBottom: 10 }}>
+        <div style={{
+          padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+          borderBottom: (done || active) ? `1px solid ${done ? '#bbf7d0' : '#e8edf5'}` : 'none',
+        }}>
+          <div style={{
+            width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+            background: done ? '#22c55e' : active ? '#2563eb' : '#d1d5db',
+            color: '#fff', fontSize: done ? 13 : 11, fontWeight: 700,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>{done ? '✓' : num}</div>
+          <span style={{ fontWeight: 700, fontSize: 13, color: future ? '#94a3b8' : done ? '#15803d' : '#1e3a5f' }}>{title}</span>
+          <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+            color: done ? '#16a34a' : active ? '#2563eb' : '#94a3b8' }}>
+            {done ? 'Complete' : active ? 'In Progress' : 'Pending'}
+          </span>
+        </div>
+        {(done || active) && (
+          <div style={{ padding: '12px 16px' }}>
+            {done ? doneContent : activeContent}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()} style={{
+        borderRadius: 20, maxWidth: 520, maxHeight: '88vh',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      }}>
+        <div className="modal-header">
+          <div>
+            <div className="modal-title">Booking Flow — #{request.id}</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginTop: 2 }}>
+              {request.submitter_name} · {request.outbound_from} → {request.outbound_to}
+            </div>
+          </div>
+          <button className="modal-close" onClick={onClose}>✕</button>
+        </div>
+
+        <div style={{ overflowY: 'auto', flex: 1, padding: '16px 20px' }}>
+          {saveErr && (
+            <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px', marginBottom: 12, fontSize: 12, color: '#dc2626' }}>
+              {saveErr}
+            </div>
+          )}
+
+          {/* Step 1 — Submitted */}
+          <Step stepKey="submitted" num={1} title="Submitted"
+            doneContent={
+              <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                Submitted by <strong>{request.submitter_name}</strong> on {request.submitted_at ? new Date(request.submitted_at).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'}
+              </div>
+            }
+          />
+
+          {/* Step 2 — Processing */}
+          <Step stepKey="processing" num={2} title="Processing"
+            doneContent={
+              <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {detail.pic_notes && <div><strong>Comment:</strong> {detail.pic_notes}</div>}
+                {detail.booking_attachment_name && (
+                  <div><strong>Attachment:</strong> {detail.booking_attachment_name} <AttachBtn label="Download" onDownload={dlAttachment} /></div>
+                )}
+              </div>
+            }
+            activeContent={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Comment</label>
+                  <textarea className="form-textarea" style={{ borderRadius: 8 }} rows={3}
+                    value={processingNotes} onChange={e => setProcessingNotes(e.target.value)}
+                    placeholder="Processing notes visible to the staff member…" />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Booking Email <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(.pdf, .eml, .msg)</span></label>
+                  <FilePickField file={processingFile} setFile={setProcessingFile}
+                    existingName={detail.booking_attachment_name} onDownload={dlAttachment} />
+                </div>
+                <button className="btn btn-primary" style={{ borderRadius: 8 }} onClick={() => save('processing')} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save & Mark Processing →'}
+                </button>
+              </div>
+            }
+          />
+
+          {/* Step 3 — Booked */}
+          <Step stepKey="booked" num={3} title="Booked"
+            doneContent={
+              <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {(detail.passengers || []).map(p => (
+                  <div key={p.id}><strong>{p.passenger_name}:</strong> {p.booking_ref || '—'}</div>
+                ))}
+                {detail.payment_deadline && (
+                  <div><strong>Payment Deadline:</strong> {new Date(detail.payment_deadline).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</div>
+                )}
+              </div>
+            }
+            activeContent={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {(detail.passengers || []).map(p => (
+                  <div key={p.id} className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label">Booking Ref — {p.passenger_name}</label>
+                    <input className="form-input" style={{ borderRadius: 8 }} placeholder="e.g. ABC123"
+                      value={bookingRefs[p.id] ?? ''} onChange={e => setBookingRefs(prev => ({ ...prev, [p.id]: e.target.value }))} />
+                  </div>
+                ))}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Payment Deadline</label>
+                  <input className="form-input" type="datetime-local" style={{ borderRadius: 8 }}
+                    value={paymentDeadline} onChange={e => setPaymentDeadline(e.target.value)} />
+                </div>
+                <button className="btn btn-primary" style={{ borderRadius: 8 }} onClick={() => save('booked')} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save & Mark Booked →'}
+                </button>
+              </div>
+            }
+          />
+
+          {/* Step 4 — Payment */}
+          <Step stepKey="awaiting_payment" num={4} title="Payment"
+            doneContent={
+              <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {detail.payment_notes && <div><strong>Notes:</strong> {detail.payment_notes}</div>}
+                {detail.payment_attachment_name && (
+                  <div><strong>Attachment:</strong> {detail.payment_attachment_name} <AttachBtn label="Download" onDownload={dlPayment} /></div>
+                )}
+              </div>
+            }
+            activeContent={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Payment Notes</label>
+                  <textarea className="form-textarea" style={{ borderRadius: 8 }} rows={2}
+                    value={paymentNotes} onChange={e => setPaymentNotes(e.target.value)}
+                    placeholder="Payment confirmation details…" />
+                </div>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label">Payment Email <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(.pdf, .eml, .msg)</span></label>
+                  <FilePickField file={paymentFile} setFile={setPaymentFile}
+                    existingName={detail.payment_attachment_name} onDownload={dlPayment} />
+                </div>
+                <button className="btn btn-primary" style={{ borderRadius: 8 }} onClick={() => save('payment')} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save & Mark Payment →'}
+                </button>
+              </div>
+            }
+          />
+
+          {/* Step 5 — Confirmed */}
+          <Step stepKey="confirmed" num={5} title="Confirmed"
+            doneContent={
+              <div style={{ fontSize: 12, color: '#15803d', display: 'flex', alignItems: 'center', gap: 6 }}>
+                ✅ Ticket issued and request confirmed.
+              </div>
+            }
+            activeContent={
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <div style={{ fontSize: 13, color: 'var(--text)' }}>
+                  All booking details are complete. Press the button below to mark the ticket as issued and complete this request.
+                </div>
+                <button style={{
+                  background: '#16a34a', color: '#fff', border: 'none',
+                  borderRadius: 8, padding: '10px 16px', fontWeight: 700, fontSize: 13, cursor: 'pointer',
+                }} onClick={() => save('confirmed')} disabled={saving}>
+                  {saving ? 'Saving…' : '✅ Issue Ticket & Complete'}
+                </button>
+              </div>
+            }
+          />
+        </div>
+      </div>
     </div>
   );
 }

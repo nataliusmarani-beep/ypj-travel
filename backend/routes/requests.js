@@ -39,11 +39,12 @@ router.get('/', async (req, res) => {
 // ── Get single request + passengers ───────────────────────────────────────
 router.get('/:id', async (req, res) => {
   const { rows: [req_] } = await pool.query(`
-    SELECT tr.id, tr.submitter_id, tr.status, tr.request_type, tr.travel_purpose,
+    SELECT tr.id, tr.submitter_id, tr.submitter_name, tr.status, tr.request_type, tr.travel_purpose,
            tr.transport_type, tr.outbound_from, tr.outbound_to, tr.outbound_date,
            tr.has_inbound, tr.inbound_from, tr.inbound_to, tr.inbound_date,
            tr.notes, tr.pic_notes, tr.pic_action_by, tr.pic_action_at,
            tr.payment_deadline, tr.booking_attachment_name,
+           tr.payment_notes, tr.payment_attachment_name,
            tr.submitted_at, tr.updated_at, tr.airplane_type, tr.rti_event_id,
            re.name AS rti_event_name
     FROM travel_requests tr
@@ -198,6 +199,87 @@ router.get('/:id/attachment', async (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="${booking_attachment_name}"`);
   res.setHeader('Content-Type', 'application/octet-stream');
   res.send(booking_attachment_data);
+});
+
+// ── Download payment attachment ────────────────────────────────────────────
+router.get('/:id/payment-attachment', async (req, res) => {
+  const { rows } = await pool.query(
+    `SELECT payment_attachment_name, payment_attachment_data FROM travel_requests WHERE id=$1`,
+    [req.params.id]
+  );
+  if (!rows[0] || !rows[0].payment_attachment_data)
+    return res.status(404).json({ error: 'No payment attachment found.' });
+  res.setHeader('Content-Disposition', `attachment; filename="${rows[0].payment_attachment_name}"`);
+  res.setHeader('Content-Type', 'application/octet-stream');
+  res.send(rows[0].payment_attachment_data);
+});
+
+// ── Booking flow section save (PIC Travel) ─────────────────────────────────
+router.patch('/:id/section', upload.single('attachment'), async (req, res) => {
+  if (!isPIC(req.user.role)) return res.status(403).json({ error: 'Forbidden.' });
+  const { section, pic_notes, payment_deadline, payment_notes, booking_refs_json } = req.body;
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+
+    if (section === 'processing') {
+      const vals = [pic_notes || null, req.user.name, req.params.id];
+      let q = `UPDATE travel_requests SET status='processing', pic_notes=$1, pic_action_by=$2, pic_action_at=NOW(), updated_at=NOW()`;
+      if (req.file) {
+        q += `, booking_attachment_name=$4, booking_attachment_data=$5`;
+        vals.splice(2, 0, req.file.originalname, req.file.buffer);
+        vals[vals.length - 1] = req.params.id;
+      }
+      q += ` WHERE id=$${vals.length}`;
+      await client.query(q, vals);
+
+    } else if (section === 'booked') {
+      await client.query(
+        `UPDATE travel_requests SET status='booked', payment_deadline=$1, pic_action_by=$2, pic_action_at=NOW(), updated_at=NOW() WHERE id=$3`,
+        [payment_deadline || null, req.user.name, req.params.id]
+      );
+      if (booking_refs_json) {
+        const refs = JSON.parse(booking_refs_json);
+        for (const { pax_id, booking_ref } of refs) {
+          await client.query(
+            `UPDATE passengers SET booking_ref=$1 WHERE id=$2 AND request_id=$3`,
+            [booking_ref || null, pax_id, req.params.id]
+          );
+        }
+      }
+
+    } else if (section === 'payment') {
+      const vals = [payment_notes || null, req.user.name, req.params.id];
+      let q = `UPDATE travel_requests SET status='awaiting_payment', payment_notes=$1, pic_action_by=$2, pic_action_at=NOW(), updated_at=NOW()`;
+      if (req.file) {
+        q += `, payment_attachment_name=$4, payment_attachment_data=$5`;
+        vals.splice(2, 0, req.file.originalname, req.file.buffer);
+        vals[vals.length - 1] = req.params.id;
+      }
+      q += ` WHERE id=$${vals.length}`;
+      await client.query(q, vals);
+
+    } else if (section === 'confirmed') {
+      await client.query(
+        `UPDATE travel_requests SET status='confirmed', pic_action_by=$1, pic_action_at=NOW(), updated_at=NOW() WHERE id=$2`,
+        [req.user.name, req.params.id]
+      );
+    } else {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invalid section.' });
+    }
+
+    await client.query('COMMIT');
+
+    const statusMap = { processing: 'processing', booked: 'booked', payment: 'awaiting_payment', confirmed: 'confirmed' };
+    res.json({ ok: true, status: statusMap[section] });
+  } catch (e) {
+    await client.query('ROLLBACK');
+    throw e;
+  } finally {
+    client.release();
+  }
 });
 
 // ── Stats ──────────────────────────────────────────────────────────────────
