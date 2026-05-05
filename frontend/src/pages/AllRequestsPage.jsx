@@ -303,14 +303,7 @@ export default function AllRequestsPage({ user }) {
                             style={{ borderRadius: 8, fontSize: 11 }}
                             onClick={() => openBookingModal(r)}
                           >
-                            📋 Booking
-                          </button>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            style={{ borderRadius: 8, fontSize: 11 }}
-                            onClick={() => openStatusModal(r)}
-                          >
-                            ⚙️
+                            📋 Update
                           </button>
                         </div>
                       </td>
