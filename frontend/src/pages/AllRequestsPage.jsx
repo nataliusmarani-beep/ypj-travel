@@ -445,11 +445,44 @@ function FilePickField({ file, setFile, existingName, onDownload }) {
   );
 }
 
+function Step({ stepKey, num, title, doneContent, activeContent, status }) {
+  const currentIdx = STEP_KEYS.indexOf(status);
+  const done   = STEP_KEYS.indexOf(stepKey) <= currentIdx;
+  const active = STEP_KEYS.indexOf(stepKey) === currentIdx + 1 || (status === 'confirmed' && stepKey === 'confirmed');
+  const future = !done && !active;
+
+  const borderColor = done ? '#86efac' : active ? '#2563eb' : '#e2e8f0';
+  const bg          = done ? '#f0fdf4' : active ? '#fff' : '#f8fafc';
+
+  return (
+    <div style={{ borderRadius: 12, border: `1.5px solid ${borderColor}`, background: bg, marginBottom: 10 }}>
+      <div style={{
+        padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
+        borderBottom: (done || active) ? `1px solid ${done ? '#bbf7d0' : '#e8edf5'}` : 'none',
+      }}>
+        <div style={{
+          width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+          background: done ? '#22c55e' : active ? '#2563eb' : '#d1d5db',
+          color: '#fff', fontSize: done ? 13 : 11, fontWeight: 700,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>{done ? '✓' : num}</div>
+        <span style={{ fontWeight: 700, fontSize: 13, color: future ? '#94a3b8' : done ? '#15803d' : '#1e3a5f' }}>{title}</span>
+        <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600,
+          color: done ? '#16a34a' : active ? '#2563eb' : '#94a3b8' }}>
+          {done ? 'Complete' : active ? 'In Progress' : 'Pending'}
+        </span>
+      </div>
+      {(done || active) && (
+        <div style={{ padding: '12px 16px' }}>
+          {done ? doneContent : activeContent}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
   const status     = request.status;
-  const currentIdx = STEP_KEYS.indexOf(status);
-  const isStepDone   = (key) => STEP_KEYS.indexOf(key) <= currentIdx;
-  const isStepActive = (key) => STEP_KEYS.indexOf(key) === currentIdx + 1;
 
   const [processingNotes, setProcessingNotes] = useState(detail.pic_notes || '');
   const [processingFile, setProcessingFile]   = useState(null);
@@ -516,41 +549,6 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
     }
   };
 
-  const Step = ({ stepKey, num, title, doneContent, activeContent }) => {
-    const done   = isStepDone(stepKey);
-    const active = isStepActive(stepKey) || (status === 'confirmed' && stepKey === 'confirmed');
-    const future = !done && !active;
-
-    const borderColor = done ? '#86efac' : active ? '#2563eb' : '#e2e8f0';
-    const bg          = done ? '#f0fdf4' : active ? '#fff' : '#f8fafc';
-
-    return (
-      <div style={{ borderRadius: 12, border: `1.5px solid ${borderColor}`, background: bg, marginBottom: 10 }}>
-        <div style={{
-          padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10,
-          borderBottom: (done || active) ? `1px solid ${done ? '#bbf7d0' : '#e8edf5'}` : 'none',
-        }}>
-          <div style={{
-            width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
-            background: done ? '#22c55e' : active ? '#2563eb' : '#d1d5db',
-            color: '#fff', fontSize: done ? 13 : 11, fontWeight: 700,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>{done ? '✓' : num}</div>
-          <span style={{ fontWeight: 700, fontSize: 13, color: future ? '#94a3b8' : done ? '#15803d' : '#1e3a5f' }}>{title}</span>
-          <span style={{ marginLeft: 'auto', fontSize: 10, fontWeight: 600,
-            color: done ? '#16a34a' : active ? '#2563eb' : '#94a3b8' }}>
-            {done ? 'Complete' : active ? 'In Progress' : 'Pending'}
-          </span>
-        </div>
-        {(done || active) && (
-          <div style={{ padding: '12px 16px' }}>
-            {done ? doneContent : activeContent}
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal" onClick={e => e.stopPropagation()} style={{
@@ -575,7 +573,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
           )}
 
           {/* Step 1 — Submitted */}
-          <Step stepKey="submitted" num={1} title="Submitted"
+          <Step stepKey="submitted" num={1} title="Submitted" status={status}
             doneContent={
               <div style={{ fontSize: 12, color: 'var(--muted)' }}>
                 Submitted by <strong>{request.submitter_name}</strong> on {request.submitted_at ? new Date(request.submitted_at).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—'}
@@ -584,7 +582,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
           />
 
           {/* Step 2 — Processing */}
-          <Step stepKey="processing" num={2} title="Processing"
+          <Step stepKey="processing" num={2} title="Processing" status={status}
             doneContent={
               <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {detail.pic_notes && <div><strong>Comment:</strong> {detail.pic_notes}</div>}
@@ -614,7 +612,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
           />
 
           {/* Step 3 — Booked */}
-          <Step stepKey="booked" num={3} title="Booked"
+          <Step stepKey="booked" num={3} title="Booked" status={status}
             doneContent={
               <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {(detail.passengers || []).map(p => (
@@ -647,7 +645,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
           />
 
           {/* Step 4 — Payment */}
-          <Step stepKey="awaiting_payment" num={4} title="Payment"
+          <Step stepKey="awaiting_payment" num={4} title="Payment" status={status}
             doneContent={
               <div style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {detail.payment_notes && <div><strong>Notes:</strong> {detail.payment_notes}</div>}
@@ -677,7 +675,7 @@ function BookingFlowModal({ request, detail, onClose, onSectionSave }) {
           />
 
           {/* Step 5 — Confirmed */}
-          <Step stepKey="confirmed" num={5} title="Confirmed"
+          <Step stepKey="confirmed" num={5} title="Confirmed" status={status}
             doneContent={
               <div style={{ fontSize: 12, color: '#15803d', display: 'flex', alignItems: 'center', gap: 6 }}>
                 ✅ Ticket issued and request confirmed.
