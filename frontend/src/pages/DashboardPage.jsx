@@ -387,7 +387,7 @@ export default function DashboardPage({ user }) {
   /* ─────────────────────────── PIC / MANAGER VIEW ─────────────────────────── */
   const now = new Date();
   const submitted   = requests.filter(r => r.status === 'submitted').length;
-  const processing  = requests.filter(r => r.status === 'processing').length;
+  const processing  = requests.filter(r => ['processing','booked','awaiting_payment'].includes(r.status)).length;
   const total_month = requests.filter(r => {
     const d = new Date(r.submitted_at);
     return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
@@ -478,7 +478,7 @@ export default function DashboardPage({ user }) {
         const filtered = activeFilter === 'submitted'
           ? requests.filter(r => r.status === 'submitted')
           : activeFilter === 'processing'
-          ? requests.filter(r => r.status === 'processing')
+          ? requests.filter(r => ['processing','booked','awaiting_payment'].includes(r.status))
           : activeFilter === 'completed'
           ? requests.filter(r => r.status === 'confirmed')
           : activeFilter === 'this_month'
